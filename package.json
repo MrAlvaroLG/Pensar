@@ -1,0 +1,32 @@
+{
+  "name": "pensar",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "version": "1.0.0",
+  "description": "Web para debates Pensar",
+  "main": "index.js",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "turbo": "^1.13.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MrAlvaroLG/Pensar.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/MrAlvaroLG/Pensar/issues"
+  },
+  "homepage": "https://github.com/MrAlvaroLG/Pensar#readme"
+}
