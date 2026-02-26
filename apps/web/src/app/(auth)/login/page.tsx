@@ -77,7 +77,7 @@ export default function LoginPage() {
                     </Button>
                 </div>
 
-                <div className="flex items-center text-sm text-muted-foreground ">
+                <div className="flex items-center text-sm text-muted-foreground">
                     No tienes una cuenta?
                     <a href="/signup" className="ml-1.5 inline-block text-sm text-foreground underline-offset-4 underline">
                         Regístrate
