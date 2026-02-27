@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@motionone/utils": "^10.18.0",
     "@pensar/lib": "*",
     "@pensar/ui": "*",
     "class-variance-authority": "^0.7.1",
