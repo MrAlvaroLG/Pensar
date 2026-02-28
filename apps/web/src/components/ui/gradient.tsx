@@ -12,50 +12,43 @@ export interface BackgroundGradientProps {
   children?: React.ReactNode
 }
 
-// Colores base en RGB para poder manipular la opacidad dentro del gradiente
 const BUBBLES = [
-  { size: "min(80vw, 80vh)", color: "59, 130, 246", duration: 25, opacity: 0.3 }, 
-  { size: "min(80vw, 80vh)", color: "59, 130, 246", duration: 25, opacity: 0.3 },
-  { size: "min(90vw, 90vh)", color: "239, 68, 68", duration: 30, opacity: 0.25 },
-  { size: "min(90vw, 90vh)", color: "239, 68, 68", duration: 30, opacity: 0.25 },
-  { size: "min(70vw, 70vh)", color: "37, 99, 235", duration: 28, opacity: 0.3 }, 
-  { size: "min(70vw, 70vh)", color: "37, 99, 235", duration: 28, opacity: 0.3 },
-  { size: "min(75vw, 75vh)", color: "220, 38, 38", duration: 32, opacity: 0.25 }, 
-  { size: "min(75vw, 75vh)", color: "220, 38, 38", duration: 32, opacity: 0.25 },
+  { size: "min(80vw, 80vh)", color: "59, 130, 246", duration: 25, opacity: 0.5 }, 
+  { size: "min(80vw, 80vh)", color: "59, 130, 246", duration: 25, opacity: 0.5 },
+  { size: "min(90vw, 90vh)", color: "239, 68, 68", duration: 30, opacity: 0.5 },
+  { size: "min(90vw, 90vh)", color: "239, 68, 68", duration: 30, opacity: 0.5 },
+  { size: "min(70vw, 70vh)", color: "37, 99, 235", duration: 28, opacity: 0.5 }, 
+  { size: "min(70vw, 70vh)", color: "37, 99, 235", duration: 28, opacity: 0.5 },
+  { size: "min(75vw, 75vh)", color: "220, 38, 38", duration: 32, opacity: 0.5 }, 
+  { size: "min(75vw, 75vh)", color: "220, 38, 38", duration: 32, opacity: 0.5 },
 ];
 
-const generateRandomPath = (numPoints = 6) => {
-  const path = Array.from({ length: numPoints }, () => `${Math.floor(Math.random() * 100) - 10}%`);
+const generateRandomPath = (numPoints = 6, unit = "vw") => {
+  const path = Array.from({ length: numPoints }, () => `${Math.floor(Math.random() * 100) - 50}${unit}`);
   path.push(path[0]);
   return path;
 };
 
-// 1. Hook para detectar si estamos en el cliente de forma segura y sincrónica
-// Esto evita el "useEffect" y satisface al linter.
 const emptySubscribe = () => () => {}
 const useIsClient = () => {
   return useSyncExternalStore(
     emptySubscribe,
-    () => true,  // Valor en el cliente
-    () => false, // Valor en el servidor
+    () => true,
+    () => false,
   )
 }
 
 export const BackgroundGradient = ({ className, children }: BackgroundGradientProps) => {
   const isClient = useIsClient();
-
-  // 2. Calculamos los paths solo cuando sabemos que estamos en el cliente.
-  // Al usar useMemo con dependencia [isClient], React gestiona esto sin efectos secundarios sucios.
   const paths = useMemo(() => {
     if (!isClient) return null;
 
     return BUBBLES.map(() => ({
-      x: generateRandomPath(6),
-      y: generateRandomPath(6),
+      x: generateRandomPath(6, "vw"),
+      y: generateRandomPath(6, "vh"),
     }));
   }, [isClient]);
 
-  // Si no estamos en el cliente, renderizamos el contenedor estático para evitar CLS
   if (!paths) {
     return (
       <div className={cn("relative h-screen w-full overflow-hidden bg-background", className)}>
@@ -72,20 +65,15 @@ export const BackgroundGradient = ({ className, children }: BackgroundGradientPr
         return (
           <motion.div
             key={index}
-            // 3. OPTIMIZACIÓN SAFARI:
-            // - Sin 'blur-xxx'.
-            // - mix-blend-mode para que los colores se fusionen bonito.
-            // - will-change-transform para forzar GPU.
             className="absolute rounded-full pointer-events-none mix-blend-multiply dark:mix-blend-screen will-change-transform"
             style={{
               width: bubble.size,
               height: bubble.size,
-              // 4. TRUCO VISUAL:
-              // Gradiente radial que se desvanece a transparente.
-              // Simula el filtro 'blur' pero cuesta 0 rendimiento.
               background: `radial-gradient(circle closest-side, rgba(${bubble.color}, ${bubble.opacity}) 0%, rgba(${bubble.color}, 0) 100%)`,
-              left: 0,
-              top: 0,
+              left: "50%",
+              top: "50%",
+              marginLeft: `calc(${bubble.size} / -2)`,
+              marginTop: `calc(${bubble.size} / -2)`,
             }}
             initial={{ 
               opacity: 0, 
@@ -113,16 +101,12 @@ export const BackgroundGradient = ({ className, children }: BackgroundGradientPr
           />
         );
       })}
-
-      {/* Capa de luz blanca superior */}
       <div
         className="absolute inset-0 pointer-events-none z-10"
         style={{
           background: "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 34%, rgba(255,255,255,0) 100%)"
         }}
       />
-
-      {/* Ruido (Noise) */}
       <div
         className="absolute inset-0 opacity-[0.03] pointer-events-none z-0 mix-blend-overlay"
         style={{
