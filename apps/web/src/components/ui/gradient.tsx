@@ -154,7 +154,7 @@ export default function HeroSection() {
           />
           <BlurText
             text="Un espacio donde la fe se explica mediante la razón"
-            className="text-base md:text-2xl text-muted-foreground font-bold text-balance text-center"
+            className="text-base md:text-2xl text-secondary-foreground font-bold text-balance text-center"
             animateBy="words"
             direction="top"
             delay={100} 
