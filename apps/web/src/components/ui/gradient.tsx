@@ -13,14 +13,14 @@ export interface BackgroundGradientProps {
 }
 
 const BUBBLES = [
-  { size: "min(80vw, 80vh)", color: "59, 130, 246", duration: 25, opacity: 0.35 }, 
-  { size: "min(80vw, 80vh)", color: "59, 130, 246", duration: 25, opacity: 0.35 },
-  { size: "min(90vw, 90vh)", color: "239, 68, 68", duration: 30, opacity: 0.35 },
-  { size: "min(90vw, 90vh)", color: "239, 68, 68", duration: 30, opacity: 0.35 },
-  { size: "min(70vw, 70vh)", color: "37, 99, 235", duration: 28, opacity: 0.35 }, 
-  { size: "min(70vw, 70vh)", color: "37, 99, 235", duration: 28, opacity: 0.35 },
-  { size: "min(75vw, 75vh)", color: "220, 38, 38", duration: 32, opacity: 0.35 }, 
-  { size: "min(75vw, 75vh)", color: "220, 38, 38", duration: 32, opacity: 0.35 },
+  { size: "min(80vw, 80vh)", color: "59, 130, 246", duration: 25, opacity: 0.28 }, 
+  { size: "min(80vw, 80vh)", color: "59, 130, 246", duration: 25, opacity: 0.28 },
+  { size: "min(90vw, 90vh)", color: "239, 68, 68", duration: 30, opacity: 0.28 },
+  { size: "min(90vw, 90vh)", color: "239, 68, 68", duration: 30, opacity: 0.28 },
+  { size: "min(70vw, 70vh)", color: "37, 99, 235", duration: 28, opacity: 0.28 }, 
+  { size: "min(70vw, 70vh)", color: "37, 99, 235", duration: 28, opacity: 0.28 },
+  { size: "min(75vw, 75vh)", color: "220, 38, 38", duration: 32, opacity: 0.28 }, 
+  { size: "min(75vw, 75vh)", color: "220, 38, 38", duration: 32, opacity: 0.28 },
 ];
 
 const generateRandomPath = (numPoints = 6, unit = "vw") => {
