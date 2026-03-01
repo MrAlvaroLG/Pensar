@@ -14,6 +14,12 @@ import {
     navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 
+const NAV_ITEMS = [
+    { href: "/", label: "Inicio" },
+    { href: "/debates", label: "Debates" },
+    { href: "/docs", label: "Biblioteca" },
+] as const;
+
 export default function NavBar() {
     const [isOpen, setIsOpen] = useState(false);
 
@@ -62,27 +68,21 @@ export default function NavBar() {
                     />
                 </div>
 
+                {/* Desktop nav */}
                 <div className="hidden md:flex flex-1">
                     <NavigationMenu className="flex-1">
                         <NavigationMenuList className="flex flex-1 justify-start px-5 gap-5">
-                            <NavigationMenuItem>
-                                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                                    <Link href="/">Inicio</Link>
-                                </NavigationMenuLink>
-                            </NavigationMenuItem>
-                            <NavigationMenuItem>
-                                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                                    <Link href="/debate">Debates</Link>
-                                </NavigationMenuLink>
-                            </NavigationMenuItem>
-                            <NavigationMenuItem>
-                                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                                    <Link href="/docs">Biblioteca</Link>
-                                </NavigationMenuLink>
-                            </NavigationMenuItem>
+                            {NAV_ITEMS.map(({ href, label }) => (
+                                <NavigationMenuItem key={href}>
+                                    <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                                        <Link href={href}>{label}</Link>
+                                    </NavigationMenuLink>
+                                </NavigationMenuItem>
+                            ))}
                         </NavigationMenuList>
                     </NavigationMenu>
                 </div>
+
                 <div>
                     <Link href="/login">
                         <Button size="sm" className="md:inline-flex">
@@ -92,6 +92,7 @@ export default function NavBar() {
                 </div>
             </div>
 
+            {/* Mobile nav */}
             <div 
                 className={`md:hidden overflow-hidden transition-all duration-700 ease-in-out ${
                     isOpen ? "max-h-96 opacity-100 border-t" : "max-h-0 opacity-0"
@@ -99,23 +100,16 @@ export default function NavBar() {
             >
                 <NavigationMenu className="max-w-full w-full bg-background shadow-lg py-4 flex flex-col items-stretch">
                     <NavigationMenuList className="flex-col w-full space-x-0 space-y-2 gap-0">
-                        <NavigationMenuItem className="w-full">
-                            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} w-full h-12 text-lg justify-start px-8 bg-transparent rounded-none`}>
-                                <Link href="/" onClick={closeMenu}>Inicio</Link>
-                            </NavigationMenuLink>
-                        </NavigationMenuItem>
-
-                        <NavigationMenuItem className="w-full">
-                            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} w-full h-12 text-lg justify-start px-8 bg-transparent rounded-none`}>
-                                <Link href="/debate" onClick={closeMenu}>Debates</Link>
-                            </NavigationMenuLink>
-                        </NavigationMenuItem>
-
-                        <NavigationMenuItem className="w-full">
-                            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} w-full h-12 text-lg justify-start px-8 bg-transparent rounded-none`}>
-                                <Link href="/docs" onClick={closeMenu}>Biblioteca</Link>
-                            </NavigationMenuLink>
-                        </NavigationMenuItem>
+                        {NAV_ITEMS.map(({ href, label }) => (
+                            <NavigationMenuItem key={href} className="w-full">
+                                <NavigationMenuLink
+                                    asChild
+                                    className={`${navigationMenuTriggerStyle()} w-full h-12 text-lg justify-start px-8 bg-transparent rounded-none`}
+                                >
+                                    <Link href={href} onClick={closeMenu}>{label}</Link>
+                                </NavigationMenuLink>
+                            </NavigationMenuItem>
+                        ))}
                     </NavigationMenuList>
                 </NavigationMenu>
             </div>
