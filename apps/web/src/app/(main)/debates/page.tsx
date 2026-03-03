@@ -43,7 +43,7 @@ function ThesisCard() {
             <span className="absolute left-4 top-3 font-serif text-5xl text-muted-foreground/20">
                 &ldquo;
             </span>
-            <p className="text-lg font-medium text-foreground">
+            <p className="text-lg mt-2 font-medium text-foreground">
                 {nextDebate.thesis}
             </p>
             <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -211,7 +211,7 @@ export default function DebatesPage() {
                         />
                         <BlurText
                             text={nextDebate.subtitle}
-                            className="text-balance pt-2 text-center text-lg font-bold text-secondary-foreground md:text-5xl"
+                            className="text-balance pt-2 text-center text-xl font-bold text-secondary-foreground md:text-5xl"
                             animateBy="words"
                             direction="top"
                             delay={100}
