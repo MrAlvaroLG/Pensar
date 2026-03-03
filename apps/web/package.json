@@ -12,6 +12,8 @@
     "@motionone/utils": "^10.18.0",
     "@pensar/lib": "*",
     "@pensar/ui": "*",
+    "@vercel/analytics": "^1.6.1",
+    "@vercel/speed-insights": "^1.3.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.34.3",
