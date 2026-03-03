@@ -68,8 +68,10 @@ function TeamCard({
             icon: Gavel,
             title: "Unirse al Equipo Rojo",
             description: "Defender la moción: Debatir como titular o reserva.",
-            accent: "red-700",
-            accentBg: "bg-red-50 dark:bg-red-900/20",
+            accentText: "text-red-700",
+            accentBg: "bg-red-700",
+            accentBgLight: "bg-red-50 dark:bg-red-900/20",
+            hoverText: "group-hover:text-red-700",
             barPosition: "left-0",
             align: "text-start",
         },
@@ -77,8 +79,10 @@ function TeamCard({
             icon: Shield,
             title: "Unirse al Equipo Azul",
             description: "Oponerse a la moción: Debatir como titular o reserva.",
-            accent: "blue-700",
-            accentBg: "bg-blue-50 dark:bg-blue-900/20",
+            accentText: "text-blue-700",
+            accentBg: "bg-blue-700",
+            accentBgLight: "bg-blue-50 dark:bg-blue-900/20",
+            hoverText: "group-hover:text-blue-700",
             barPosition: "right-0",
             align: "text-end",
         },
@@ -92,14 +96,14 @@ function TeamCard({
                 href="/signup"
                 className={`group relative flex h-full flex-col justify-between overflow-hidden rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${!isRed ? "text-right" : ""}`}
             >
-                <div className={`absolute ${config.barPosition} top-0 h-full w-1 bg-${config.accent}`} />
+                <div className={`absolute ${config.barPosition} top-0 h-full w-1 ${config.accentBg}`} />
 
-                <div className={`mb-4 flex size-10 items-center justify-center rounded-full ${config.accentBg} text-${config.accent} ${!isRed ? "ml-auto" : ""}`}>
+                <div className={`mb-4 flex size-10 items-center justify-center rounded-full ${config.accentBgLight} ${config.accentText} ${!isRed ? "ml-auto" : ""}`}>
                     <Icon className="size-5" />
                 </div>
 
                 <div className={`flex flex-col ${config.align}`}>
-                    <h3 className={`text-xl font-bold text-foreground transition-colors group-hover:text-${config.accent}`}>
+                    <h3 className={`text-xl font-bold text-foreground transition-colors ${config.hoverText}`}>
                         {config.title}
                     </h3>
                     <p className="mt-2 text-sm text-muted-foreground">
@@ -107,7 +111,7 @@ function TeamCard({
                     </p>
                 </div>
 
-                <div className={`mt-4 flex items-center text-sm font-semibold text-${config.accent} ${!isRed ? "justify-end" : ""}`}>
+                <div className={`mt-4 flex items-center text-sm font-semibold ${config.accentText} ${!isRed ? "justify-end" : ""}`}>
                     Registrarse
                     <ArrowRight className="ml-1 size-4 transition-transform group-hover:translate-x-1" />
                 </div>
@@ -121,22 +125,22 @@ function AudienceCard() {
         <motion.div {...fadeIn(0.6)} className="md:col-span-2">
             <Link
                 href="/signup"
-                className="group flex flex-col items-center justify-between gap-4 overflow-hidden rounded-xl border border-border bg-secondary/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:flex-row"
+                className="group flex flex-col items-center justify-between gap-4 overflow-hidden rounded-xl border border-border bg-card p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:p-6 md:flex-row"
             >
-                <div className="flex items-center gap-4">
+                <div className="flex w-full flex-col items-center gap-3 md:flex-row md:gap-4">
                     <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
                         <Users className="size-6" />
                     </div>
                     <div className="text-center md:text-left">
-                        <h3 className="text-xl font-bold text-foreground">
+                        <h3 className="text-lg font-bold text-foreground md:text-xl">
                             Asistir como Público
                         </h3>
-                        <p className="mt-1 text-sm text-muted-foreground">
+                        <p className="mt-1 text-xs text-muted-foreground md:text-sm">
                             Escuchar los argumentos y participar en la sesión de Preguntas.
                         </p>
                     </div>
                 </div>
-                <div className="flex items-center text-sm font-semibold text-foreground">
+                <div className="flex w-full items-center justify-center text-xs font-semibold text-foreground md:justify-end md:text-sm">
                     Reservar lugar
                     <ArrowRight className="ml-1 size-4 transition-transform group-hover:translate-x-1" />
                 </div>
@@ -242,16 +246,15 @@ export default function DebatesPage() {
 
             <Separator className="mx-auto max-w-6xl" />
 
-            {/* ── Debates Anteriores ───────────────────────── */}
             <section className="mx-auto max-w-6xl px-4 py-16">
                 <motion.div {...fadeIn(0)}>
-                    <div className="mb-8 flex items-center justify-between">
+                    <div className="mb-8 flex flex-col items-start justify-between">
                         <h2 className="text-2xl font-bold text-foreground">
                             Debates Anteriores
                         </h2>
                         <Link
                             href="/debates/archivo"
-                            className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                            className="flex items-center gap-1 pt-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
                         >
                             Ver todo el archivo
                             <ArrowRight className="size-4" />
