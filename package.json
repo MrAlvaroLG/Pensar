@@ -28,5 +28,10 @@
   "bugs": {
     "url": "https://github.com/MrAlvaroLG/Pensar/issues"
   },
-  "homepage": "https://github.com/MrAlvaroLG/Pensar#readme"
+  "homepage": "https://github.com/MrAlvaroLG/Pensar#readme",
+  "dependencies": {
+    "@prisma/client": "^7.4.2",
+    "better-auth": "^1.5.3",
+    "prisma": "^7.4.2"
+  }
 }

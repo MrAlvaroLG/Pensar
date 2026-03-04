@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
+import UserMenu from "@/components/layout/user-menu";
 
 const NAV_ITEMS = [
     { href: "/", label: "Inicio" },
@@ -17,6 +19,8 @@ const NAV_ITEMS = [
 export default function NavBar() {
     const [isOpen, setIsOpen] = useState(false);
     const pathname = usePathname();
+    const { data: session, isPending } = authClient.useSession();
+    const isLoggedIn = !!session?.user;
 
     // Close mobile menu on route change
     const [prevPathname, setPrevPathname] = useState(pathname);
@@ -80,9 +84,15 @@ export default function NavBar() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-3">
-                        <Button asChild size="sm">
-                            <Link href="/login">Iniciar Sesión</Link>
-                        </Button>
+                        {isPending ? (
+                            <div className="size-8 animate-pulse rounded-full bg-muted" />
+                        ) : isLoggedIn ? (
+                            <UserMenu />
+                        ) : (
+                            <Button asChild size="sm">
+                                <Link href="/login">Iniciar Sesión</Link>
+                            </Button>
+                        )}
 
                         <button
                             type="button"

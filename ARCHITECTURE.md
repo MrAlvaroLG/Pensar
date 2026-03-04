@@ -10,7 +10,7 @@ Monorepo basado en:
 * **TypeScript**
 * **Tailwind CSS**
 * **Prisma + PostgreSQL (Supabase)**
-* **NextAuth para autenticación**
+* **BetterAuth para autenticación**
 * **Deploy en Vercel**
 
 ---
@@ -152,7 +152,7 @@ Contiene:
 
 Sistema:
 
-* NextAuth
+* BetterAuth
 * Adapter Prisma
 * Roles:
   * USER
@@ -175,7 +175,7 @@ Variables necesarias:
 
 ```env
 DATABASE_URL=
-NEXTAUTH_SECRET=
+BetterAuth_SECRET=
 SUPABASE_URL=
 SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
@@ -248,7 +248,7 @@ No hay votación ni jueces.
 | Backend  | Next.js Server Actions |
 | DB       | PostgreSQL (Supabase)  |
 | ORM      | Prisma                 |
-| Auth     | NextAuth               |
+| Auth     | BetterAuth             |
 | Monorepo | npm workspaces         |
 | Build    | Turborepo              |
 | Hosting  | Vercel                 |
