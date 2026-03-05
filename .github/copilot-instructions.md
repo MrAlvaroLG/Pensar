@@ -2,10 +2,9 @@
 
 ## Architecture
 
-Monorepo (npm workspaces + Turborepo) with two Next.js 16 apps and three shared packages:
+Monorepo (npm workspaces + Turborepo) with one Next.js 16 app and three shared packages:
 
-- `apps/web` (@pensar/web) — Public app: landing, debates, docs, auth. Port 3000.
-- `apps/admin` (@pensar/admin) — Admin panel. Port 3001.
+- `apps/web` (@pensar/web) — Public app + admin panel (`/dashboard`): landing, debates, docs, auth, admin. Port 3000.
 - `packages/db` (@pensar/db) — Prisma schema + client (not yet implemented).
 - `packages/ui` (@pensar/ui) — Shared components (`Button`, etc.). Simple `forwardRef` components.
 - `packages/lib` (@pensar/lib) — Shared utilities. Exports `cn` (simple class joiner, no `twMerge`).
@@ -48,6 +47,7 @@ npm run db:studio    # prisma studio
 Uses Next.js App Router with route groups:
 - `(main)/*` — Pages with `NavBar` (landing `/`, `/debates`, `/docs`)
 - `(auth)/*` — Auth pages with centered layout, no navbar (`/login`, `/signup`)
+- `(admin)/*` — Admin panel (`/dashboard`), protected by middleware (`role === "ADMIN"`)
 - Static data colocated in `data.ts` alongside pages/components that consume it.
 
 ## Security Rules

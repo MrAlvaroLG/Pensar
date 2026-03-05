@@ -21,8 +21,7 @@ Monorepo basado en:
 pensar-monorepo/
 │
 ├── apps/
-│   ├── web/        → Aplicación pública (landing + inscripción + biblioteca)
-│   └── admin/      → Panel de administración
+│   └── web/        → Aplicación pública + panel de administración (/dashboard)
 │
 ├── packages/
 │   ├── db/         → Prisma schema + Prisma Client
@@ -70,27 +69,19 @@ Responsable de:
 * Login
 * Inscripción a debates
 * Descarga de bibliografía
+* Panel de administración (`/dashboard`, protegido por rol ADMIN):
+  * Crear debates
+  * Activar/desactivar inscripciones
+  * Ver inscritos
+  * Filtrar por equipo (RED / BLUE)
+  * Subir bibliografía
+  * Exportar datos
 
 Framework:
 
-* Next.js 14
+* Next.js 16
 * App Router
-* Tailwind
-
----
-
-## apps/admin
-
-Responsable de:
-
-* Crear debates
-* Activar/desactivar inscripciones
-* Ver inscritos
-* Filtrar por equipo (RED / BLUE)
-* Subir bibliografía
-* Exportar datos
-
-Protegido por middleware (role = ADMIN)
+* Tailwind CSS v4
 
 ---
 
@@ -132,7 +123,6 @@ Contiene:
 Usado por:
 
 * apps/web
-* apps/admin
 
 ---
 
@@ -160,7 +150,7 @@ Sistema:
 
 Protección:
 
-* Middleware en /admin
+* Middleware en /dashboard (role = ADMIN)
 * Server-side validation en inscripción
 
 ---
@@ -199,14 +189,12 @@ Sistema:
 Hosting:
 
 * Vercel
-* Proyecto 1 → apps/web
-* Proyecto 2 → apps/admin
+* Proyecto → apps/web
 
 Root directory en Vercel:
 
 ```text
 apps/web
-apps/admin
 ```
 
 ---
@@ -216,7 +204,7 @@ apps/admin
 1. No permitir múltiples inscripciones por usuario por debate.
 2. Toda validación crítica debe ser server-side.
 3. Nunca exponer SERVICE_ROLE_KEY en frontend.
-4. Middleware debe proteger rutas admin.
+4. Middleware debe proteger rutas `/dashboard` (role = ADMIN).
 5. Prisma solo debe inicializarse una vez (singleton pattern).
 6. Los equipos posibles son únicamente:
 

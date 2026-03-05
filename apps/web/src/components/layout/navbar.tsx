@@ -22,14 +22,12 @@ export default function NavBar() {
     const { data: session, isPending } = authClient.useSession();
     const isLoggedIn = !!session?.user;
 
-    // Close mobile menu on route change
     const [prevPathname, setPrevPathname] = useState(pathname);
     if (prevPathname !== pathname) {
         setPrevPathname(pathname);
         if (isOpen) setIsOpen(false);
     }
 
-    // Prevent body scroll when mobile menu is open
     useEffect(() => {
         document.body.style.overflow = isOpen ? "hidden" : "";
         return () => {
@@ -46,7 +44,6 @@ export default function NavBar() {
         <>
             <header className="fixed top-0 left-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-lg supports-backdrop-filter:bg-background/60">
                 <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-                    {/* Logo */}
                     <Link
                         href="/"
                         className="flex shrink-0 items-center gap-2.5 transition-opacity hover:opacity-80"
@@ -63,7 +60,6 @@ export default function NavBar() {
                         </span>
                     </Link>
 
-                    {/* Desktop navigation */}
                     <ul className="hidden items-center gap-1 md:flex">
                         {NAV_ITEMS.map(({ href, label }) => (
                             <li key={href}>
@@ -82,7 +78,6 @@ export default function NavBar() {
                         ))}
                     </ul>
 
-                    {/* Actions */}
                     <div className="flex items-center gap-3">
                         {isPending ? (
                             <div className="size-8 animate-pulse rounded-full bg-muted" />
@@ -107,7 +102,6 @@ export default function NavBar() {
                     </div>
                 </nav>
 
-                {/* Mobile menu */}
                 <div
                     id="mobile-menu"
                     role="navigation"
@@ -140,7 +134,6 @@ export default function NavBar() {
                 </div>
             </header>
 
-            {/* Backdrop overlay — closes mobile menu on tap */}
             <div
                 className={cn(
                     "fixed inset-0 z-40 bg-background/60 backdrop-blur-sm transition-opacity duration-300 md:hidden",

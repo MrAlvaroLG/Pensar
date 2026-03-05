@@ -60,6 +60,17 @@ export const auth = betterAuth({
                 type: "string",
                 required: true,
             },
+            role: { 
+                type: "string", 
+                required: false, 
+                defaultValue: "USER" 
+            }
         },
     },
+    session: {
+        cookieCache: {
+            enabled: true,
+            maxAge: 5 * 60
+        }
+    }
 })

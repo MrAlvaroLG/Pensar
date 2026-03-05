@@ -44,6 +44,7 @@ export default function UserMenu() {
     const { user } = session
     const displayName = user.name || "Usuario"
     const initials = getInitials(displayName)
+    const userRole = (user as { role?: string }).role
 
     const handleSignOut = async () => {
         await authClient.signOut({
@@ -80,7 +81,6 @@ export default function UserMenu() {
                 align="end"
                 sideOffset={8}
             >
-                {/* User info header */}
                 <DropdownMenuLabel className="font-normal">
                     <div className="flex items-center gap-3 py-0.5">
                         <Avatar size="default">
@@ -102,45 +102,34 @@ export default function UserMenu() {
                         </div>
                     </div>
                 </DropdownMenuLabel>
-
                 <DropdownMenuSeparator />
-
-                {/* Navigation items */}
-                <DropdownMenuGroup>
-                    <DropdownMenuItem
-                        onClick={() => router.push("/dashboard")}
-                        className="cursor-pointer"
-                    >
-                        <LayoutDashboard />
-                        <span>Panel</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                        onClick={() => router.push("/perfil")}
-                        className="cursor-pointer"
-                    >
-                        <User />
-                        <span>Mi Perfil</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                        onClick={() => router.push("/configuracion")}
-                        className="cursor-pointer"
-                    >
-                        <Settings />
-                        <span>Configuración</span>
-                    </DropdownMenuItem>
-                </DropdownMenuGroup>
-
+                    <DropdownMenuGroup>
+                        {userRole === "ADMIN" && (
+                            <DropdownMenuItem
+                                onClick={() => router.push("/dashboard")}
+                                className="cursor-pointer"
+                            >
+                                <LayoutDashboard />
+                                <span>Administrador</span>
+                            </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem
+                            onClick={() => router.push("/perfil")}
+                            className="cursor-pointer"
+                        >
+                            <User />
+                            <span>Mi Perfil</span>
+                        </DropdownMenuItem>
+                    </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-
-                {/* Sign out */}
-                <DropdownMenuItem
-                    onClick={handleSignOut}
-                    variant="destructive"
-                    className="cursor-pointer"
-                >
-                    <LogOut />
-                    <span>Cerrar Sesión</span>
-                </DropdownMenuItem>
+                    <DropdownMenuItem
+                        onClick={handleSignOut}
+                        variant="destructive"
+                        className="cursor-pointer"
+                    >
+                        <LogOut />
+                        <span>Cerrar Sesión</span>
+                    </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     )
