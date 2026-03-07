@@ -71,10 +71,10 @@ export const auth = betterAuth({
             }
         },
     },
+    // Avoid large cached-session cookies in production (Vercel has strict header limits).
     session: {
         cookieCache: {
-            enabled: true,
-            maxAge: 5 * 60
-        }
-    }
+            enabled: false,
+        },
+    },
 })
