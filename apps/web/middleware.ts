@@ -1,19 +1,24 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 
 export async function middleware(request: NextRequest) {
-    const path = request.nextUrl.pathname;
-    const isDashboardRoute = path.startsWith("/dashboard");
-    const sessionCookie = request.cookies.get("better-auth.session_token");
-    if ((isDashboardRoute) && !sessionCookie) {
-        return NextResponse.redirect(new URL("/login", request.url));
+    const path = request.nextUrl.pathname
+    const isDashboardRoute = path.startsWith("/dashboard")
+
+    const hasSessionCookie = request.cookies.getAll().some(({ name }) =>
+        /^(?:__Secure-)?better-auth\.session_token(?:\.\d+)?$/.test(name)
+    )
+
+    if (isDashboardRoute && !hasSessionCookie) {
+        return NextResponse.redirect(new URL("/login", request.url))
     }
-    return NextResponse.next();
+
+    return NextResponse.next()
 }
 
 export const config = {
     matcher: [
-        "/dashboard/:path*", 
+        "/dashboard/:path*",
         "/((?!api|_next/static|_next/image|favicon.ico).*)",
     ],
-};
+}
