@@ -49,7 +49,7 @@ export default function NavBar() {
                         className="flex shrink-0 items-center gap-2.5 transition-opacity hover:opacity-80"
                     >
                         <Image
-                            src="/logo/Logo Negro.svg"
+                            src="/logo/logo-negro.svg"
                             width={28}
                             height={28}
                             alt="Pensar"

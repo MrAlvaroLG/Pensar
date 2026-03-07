@@ -27,7 +27,7 @@ export default function HeroSection() {
             <div className="flex max-w-3xl flex-col items-center space-y-4">
             <motion.div {...fadeInTransition}>
                 <Image
-                src="logo/Logo Negro.svg"
+                src="/logo/logo-negro.svg"
                 alt="Pensar"
                 width={120}
                 height={120}
