@@ -1,13 +1,14 @@
 "use client"
 
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { authClient } from "@/lib/auth-client"
 import {
     LogOut,
-    Settings,
     User,
     LayoutDashboard,
 } from "lucide-react"
+import ProfileDialog from "@/components/layout/profile-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
     DropdownMenu,
@@ -31,6 +32,7 @@ function getInitials(name: string): string {
 
 export default function UserMenu() {
     const router = useRouter()
+    const [isProfileOpen, setIsProfileOpen] = useState(false)
     const { data: session, isPending } = authClient.useSession()
 
     if (isPending) {
@@ -44,7 +46,12 @@ export default function UserMenu() {
     const { user } = session
     const displayName = user.name || "Usuario"
     const initials = getInitials(displayName)
-    const userRole = (user as { role?: string }).role
+    const userData = user as {
+        role?: string
+        postura?: string | null
+        phoneNumber?: string | null
+    }
+    const userRole = userData.role
 
     const handleSignOut = async () => {
         await authClient.signOut({
@@ -58,31 +65,13 @@ export default function UserMenu() {
     }
 
     return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <button
-                    type="button"
-                    className="relative flex size-8 items-center justify-center rounded-full ring-2 ring-transparent transition-all hover:ring-ring/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                    <Avatar size="default">
-                        <AvatarImage
-                            src={user.image ?? undefined}
-                            alt={displayName}
-                        />
-                        <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
-                            {initials}
-                        </AvatarFallback>
-                    </Avatar>
-                </button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent
-                className="w-56"
-                align="end"
-                sideOffset={8}
-            >
-                <DropdownMenuLabel className="font-normal">
-                    <div className="flex items-center gap-3 py-0.5">
+        <>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <button
+                        type="button"
+                        className="relative flex size-8 items-center justify-center rounded-full ring-2 ring-transparent transition-all hover:ring-ring/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
                         <Avatar size="default">
                             <AvatarImage
                                 src={user.image ?? undefined}
@@ -92,17 +81,36 @@ export default function UserMenu() {
                                 {initials}
                             </AvatarFallback>
                         </Avatar>
-                        <div className="flex min-w-0 flex-col">
-                            <span className="truncate text-sm font-semibold leading-tight">
-                                {displayName}
-                            </span>
-                            <span className="truncate text-xs text-muted-foreground">
-                                {user.email}
-                            </span>
+                    </button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent
+                    className="w-56"
+                    align="end"
+                    sideOffset={8}
+                >
+                    <DropdownMenuLabel className="font-normal">
+                        <div className="flex items-center gap-3 py-0.5">
+                            <Avatar size="default">
+                                <AvatarImage
+                                    src={user.image ?? undefined}
+                                    alt={displayName}
+                                />
+                                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
+                                    {initials}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div className="flex min-w-0 flex-col">
+                                <span className="truncate text-sm font-semibold leading-tight">
+                                    {displayName}
+                                </span>
+                                <span className="truncate text-xs text-muted-foreground">
+                                    {user.email}
+                                </span>
+                            </div>
                         </div>
-                    </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
                     <DropdownMenuGroup>
                         {userRole === "ADMIN" && (
                             <DropdownMenuItem
@@ -114,23 +122,36 @@ export default function UserMenu() {
                             </DropdownMenuItem>
                         )}
                         <DropdownMenuItem
-                            onClick={() => router.push("/perfil")}
+                            onClick={() => setIsProfileOpen(true)}
                             className="cursor-pointer"
                         >
                             <User />
                             <span>Mi Perfil</span>
                         </DropdownMenuItem>
                     </DropdownMenuGroup>
-                <DropdownMenuSeparator />
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem
                         onClick={handleSignOut}
                         variant="destructive"
                         className="cursor-pointer"
                     >
                         <LogOut />
-                        <span>Cerrar Sesión</span>
+                        <span>Cerrar Sesion</span>
                     </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+                </DropdownMenuContent>
+            </DropdownMenu>
+
+            <ProfileDialog
+                open={isProfileOpen}
+                onOpenChange={setIsProfileOpen}
+                user={{
+                    name: user.name,
+                    email: user.email,
+                    image: user.image,
+                    postura: userData.postura,
+                    phoneNumber: userData.phoneNumber,
+                }}
+            />
+        </>
     )
 }

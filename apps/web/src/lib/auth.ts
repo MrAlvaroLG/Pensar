@@ -60,6 +60,10 @@ export const auth = betterAuth({
                 type: "string",
                 required: true,
             },
+            phoneNumber: {
+                type: "string",
+                required: false,
+            },
             role: { 
                 type: "string", 
                 required: false, 
