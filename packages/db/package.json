@@ -7,7 +7,8 @@
     "build": "prisma generate",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:seed:debates": "node scripts/seed-debates.mjs"
   },
   "devDependencies": {
     "@types/pg": "^8.18.0",

@@ -20,6 +20,13 @@ enum Postura {
   OTRO
 }
 
+enum DebateStatus {
+  DRAFT
+  SCHEDULED
+  LIVE
+  FINISHED
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -77,4 +84,34 @@ model Verification {
   updatedAt  DateTime?  @updatedAt
 
   @@map("verification")
+}
+
+model Debate {
+  id           String              @id @default(cuid())
+  title        String
+  subtitle     String
+  question     String
+  thesis       String
+  startAt      DateTime
+  endAt        DateTime
+  status       DebateStatus        @default(DRAFT)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  bibliography DebateBibliography[]
+
+  @@index([status, startAt])
+  @@index([endAt])
+  @@map("debate")
+}
+
+model DebateBibliography {
+  id        String   @id @default(cuid())
+  label     String
+  url       String
+  debateId  String
+  debate    Debate   @relation(fields: [debateId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([debateId])
+  @@map("debate_bibliography")
 }

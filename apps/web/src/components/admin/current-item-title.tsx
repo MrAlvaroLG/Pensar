@@ -3,6 +3,8 @@
 import { usePathname } from "next/navigation"
 
 const ADMIN_TITLE_BY_ROUTE: Array<{ route: string; title: string }> = [
+    { route: "/dashboard/current-debate", title: "Debate Actual" },
+    { route: "/dashboard/upcoming-debate", title: "Debate Próximo" },
     { route: "/dashboard/user-stats", title: "Estadísticas de Usuarios" },
     { route: "/dashboard/users", title: "Lista de Usuarios" },
     { route: "/dashboard/roles", title: "Roles" },

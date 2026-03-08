@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronDown, House, Users } from "lucide-react"
+import { ChevronDown, House, Users, Gavel, Megaphone, ChartColumnBig } from "lucide-react"
 import {
     Sidebar,
     SidebarContent,
@@ -29,10 +29,18 @@ const ADMIN_SECTIONS = [
         label: "Usuarios",
         items: [
             { label: "Usuarios y Roles", href: "/dashboard/users", icon: Users },
-            { label: "Estadisticas", href: "/dashboard/user-stats", icon: Users },
+            { label: "Estadisticas", href: "/dashboard/user-stats", icon: ChartColumnBig },
         ],
+        
     },
-    
+    {
+        label: "Debates",
+        items: [
+            { label: "Debate Actual", href: "/dashboard/current-debate", icon: Gavel },
+            { label: "Debate Proximo", href: "/dashboard/upcoming-debate", icon: Megaphone },
+        ],
+        
+    },
 ] as const
 
 export function AppSidebar({ ...props }: AppSidebarProps) {

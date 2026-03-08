@@ -34,3 +34,19 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Debates Automation
+
+This app includes a protected cron endpoint at `/api/cron/debates`.
+
+- Method: `GET` or `POST`
+- Auth: `Authorization: Bearer <CRON_SECRET>` or header `x-cron-secret: <CRON_SECRET>`
+- Purpose: moves ended debates to `FINISHED` and promotes scheduled debates to `LIVE` when their `startAt` arrives
+
+Local manual trigger example:
+
+```bash
+curl -X POST http://localhost:3000/api/cron/debates -H "Authorization: Bearer $CRON_SECRET"
+```
+
+Vercel cron is configured in `apps/web/vercel.json` to run every 5 minutes.
