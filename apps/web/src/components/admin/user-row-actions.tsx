@@ -68,7 +68,7 @@ export function UserRowActions({
                     </DialogHeader>
                     <DialogFooter className="flex flex-row justify-between">
                         <DialogClose asChild>
-                            <Button type="button" variant="outline" className="w-1/2">Cancelar</Button>
+                            <Button type="button" variant="outline">Cancelar</Button>
                         </DialogClose>
                         <form action={onDelete}>
                             <input type="hidden" name="userId" value={userId} />
