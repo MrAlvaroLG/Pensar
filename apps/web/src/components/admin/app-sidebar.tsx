@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronDown, House, Users, UserLock } from "lucide-react"
+import { ChevronDown, House, Users } from "lucide-react"
 import {
     Sidebar,
     SidebarContent,
@@ -28,8 +28,8 @@ const ADMIN_SECTIONS = [
     {
         label: "Usuarios",
         items: [
-            { label: "Lista de Usuarios", href: "/dashboard/users", icon: Users },
-            { label: "Roles", href: "/dashboard/roles", icon: UserLock },
+            { label: "Usuarios y Roles", href: "/dashboard/users", icon: Users },
+            { label: "Estadisticas", href: "/dashboard/user-stats", icon: Users },
         ],
     },
     

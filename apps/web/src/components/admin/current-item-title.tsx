@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation"
 
 const ADMIN_TITLE_BY_ROUTE: Array<{ route: string; title: string }> = [
+    { route: "/dashboard/user-stats", title: "Estadísticas de Usuarios" },
     { route: "/dashboard/users", title: "Lista de Usuarios" },
     { route: "/dashboard/roles", title: "Roles" },
     { route: "/dashboard", title: "Dashboard" },

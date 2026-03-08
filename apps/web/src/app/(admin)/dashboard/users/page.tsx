@@ -3,86 +3,172 @@ import {
     TableBody,
     TableCaption,
     TableCell,
-    TableFooter,
     TableHead,
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { UserRowActions } from "../../../../components/admin/user-row-actions"
+import { auth } from "@/lib/auth"
+import prisma from "@pensar/db"
+import { revalidatePath } from "next/cache"
+import { headers } from "next/headers"
 
-    const invoices = [
-    {
-        invoice: "INV001",
-        paymentStatus: "Paid",
-        totalAmount: "$250.00",
-        paymentMethod: "Credit Card",
-    },
-    {
-        invoice: "INV002",
-        paymentStatus: "Pending",
-        totalAmount: "$150.00",
-        paymentMethod: "PayPal",
-    },
-    {
-        invoice: "INV003",
-        paymentStatus: "Unpaid",
-        totalAmount: "$350.00",
-        paymentMethod: "Bank Transfer",
-    },
-    {
-        invoice: "INV004",
-        paymentStatus: "Paid",
-        totalAmount: "$450.00",
-        paymentMethod: "Credit Card",
-    },
-    {
-        invoice: "INV005",
-        paymentStatus: "Paid",
-        totalAmount: "$550.00",
-        paymentMethod: "PayPal",
-    },
-    {
-        invoice: "INV006",
-        paymentStatus: "Pending",
-        totalAmount: "$200.00",
-        paymentMethod: "Bank Transfer",
-    },
-    {
-        invoice: "INV007",
-        paymentStatus: "Unpaid",
-        totalAmount: "$300.00",
-        paymentMethod: "Credit Card",
-    },
-]
+interface UserRow {
+    id: string
+    name: string
+    email: string
+    postura: string | null
+    phoneNumber: string | null
+    role: "USER" | "ADMIN"
+}
 
+async function deleteUserAction(formData: FormData) {
+    "use server"
 
-export default function DashboardUsersPage() {
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    })
+
+    if (!session || session.user.role !== "ADMIN") {
+        throw new Error("No autorizado")
+    }
+
+    const userId = formData.get("userId")
+
+    if (typeof userId !== "string" || userId.length === 0) {
+        throw new Error("ID de usuario inválido")
+    }
+
+    if (userId === session.user.id) {
+        throw new Error("No puedes eliminar tu propia cuenta")
+    }
+
+    await prisma.user.delete({
+        where: {
+            id: userId,
+        },
+    })
+
+    revalidatePath("/dashboard/users")
+}
+
+async function makeUserAdminAction(formData: FormData) {
+    "use server"
+
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    })
+
+    if (!session || session.user.role !== "ADMIN") {
+        throw new Error("No autorizado")
+    }
+
+    const userId = formData.get("userId")
+
+    if (typeof userId !== "string" || userId.length === 0) {
+        throw new Error("ID de usuario inválido")
+    }
+
+    await prisma.user.update({
+        where: {
+            id: userId,
+        },
+        data: {
+            role: "ADMIN",
+        },
+    })
+
+    revalidatePath("/dashboard/users")
+}
+
+function UsersSectionTable({
+    users,
+    title,
+    emptyMessage,
+    canPromote,
+}: {
+    users: UserRow[]
+    title: string
+    emptyMessage: string
+    canPromote: boolean
+}) {
     return (
-        <Table>
-        <TableCaption>A list of your recent invoices.</TableCaption>
-        <TableHeader>
-            <TableRow>
-            <TableHead className="w-[100px]">Invoice</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Method</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-            </TableRow>
-        </TableHeader>
-        <TableBody>
-            {invoices.map((invoice) => (
-            <TableRow key={invoice.invoice}>
-                <TableCell className="font-medium">{invoice.invoice}</TableCell>
-                <TableCell>{invoice.paymentStatus}</TableCell>
-                <TableCell>{invoice.paymentMethod}</TableCell>
-                <TableCell className="text-right">{invoice.totalAmount}</TableCell>
-            </TableRow>
-            ))}
-        </TableBody>
-        <TableFooter>
-            <TableRow>
-            <TableCell colSpan={3}>Total</TableCell>
-            <TableCell className="text-right">$2,500.00</TableCell>
-            </TableRow>
-        </TableFooter>
-        </Table>
+        <section className="space-y-2">
+            <h2 className="text-lg font-semibold">{title}</h2>
+            <Table>
+                <TableCaption>{title}</TableCaption>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Nombre</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Postura</TableHead>
+                        <TableHead>Número</TableHead>
+                        <TableHead className="text-right">Acciones</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {users.length === 0 && (
+                        <TableRow>
+                            <TableCell colSpan={5} className="text-center text-muted-foreground">
+                                {emptyMessage}
+                            </TableCell>
+                        </TableRow>
+                    )}
+                    {users.map((user) => (
+                        <TableRow key={user.id}>
+                            <TableCell className="font-medium">{user.name}</TableCell>
+                            <TableCell>{user.email}</TableCell>
+                            <TableCell>{user.postura ?? "-"}</TableCell>
+                            <TableCell>{user.phoneNumber}</TableCell>
+                            <TableCell className="text-right">
+                                <UserRowActions
+                                    userId={user.id}
+                                    userName={user.name}
+                                    canPromote={canPromote}
+                                    onDelete={deleteUserAction}
+                                    onPromote={makeUserAdminAction}
+                                />
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </section>
+    )
+}
+
+export default async function DashboardUsersPage() {
+    const users = await prisma.user.findMany({
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            postura: true,
+            phoneNumber: true,
+            role: true,
+        },
+        orderBy: {
+            createdAt: "desc",
+        },
+    })
+
+    const adminUsers: UserRow[] = users.filter((user) => user.role === "ADMIN")
+    const standardUsers: UserRow[] = users.filter((user) => user.role === "USER")
+
+    return (
+        <section className="space-y-8">
+            <UsersSectionTable
+                users={adminUsers}
+                title="Administradores"
+                emptyMessage="No hay administradores registrados."
+                canPromote={false}
+            />
+            <UsersSectionTable
+                users={standardUsers}
+                title="Usuarios"
+                emptyMessage="No hay usuarios con rol USER."
+                canPromote
+            />
+        </section>
     )
 }

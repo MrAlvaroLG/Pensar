@@ -157,11 +157,11 @@ export default function ProfileDialog({ open, onOpenChange, user }: ProfileDialo
                 </DialogHeader>
 
                 <div className="space-y-6 px-6 py-4">
-                    <section className="flex flex-col items-center gap-3 rounded-xl border bg-card p-6">
+                    <section className="flex flex-col items-center gap-3 bg-card px-6">
                         <div className="relative">
                             <Avatar
                             onClick={() => imageInputRef.current?.click()}
-                            className="size-20 md:size-25 border-4 border-background shadow-md">
+                            className="size-32 md:size-40 border-4 border-background shadow-md">
                                 <AvatarImage src={imageDataUrl ?? undefined} alt={name || "Usuario"} />
                                 <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-semibold">
                                     {initials}

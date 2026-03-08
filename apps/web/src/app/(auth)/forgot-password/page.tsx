@@ -108,7 +108,7 @@ export default function ForgotPasswordPage() {
                     <CardHeader className="flex flex-col items-center text-center">
                         <Image
                             className="pb-3"
-                            src="logo/Logo Negro.svg"
+                            src="/logo/logo-negro.svg"
                             alt="Pensar"
                             width={50}
                             height={50}
@@ -159,7 +159,7 @@ export default function ForgotPasswordPage() {
                     <CardHeader className="flex flex-col items-center text-center">
                         <Image
                             className="pb-3"
-                            src="logo/Logo Negro.svg"
+                            src="/logo/logo-negro.svg"
                             alt="Pensar"
                             width={50}
                             height={50}
