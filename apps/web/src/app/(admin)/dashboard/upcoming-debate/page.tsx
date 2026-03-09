@@ -2,7 +2,7 @@ import prisma from "@pensar/db"
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import { toDateTimeLocalValue } from "@/lib/debates"
+import { getDebateQueue, toDateTimeLocalValue } from "@/lib/debates"
 import { Button } from "@/components/ui/button"
 
 function parseDateField(value: FormDataEntryValue | null, label: string) {
@@ -125,23 +125,7 @@ async function saveUpcomingDebateAction(formData: FormData) {
 }
 
 export default async function UpcomingDebatePage() {
-    const queue = await prisma.debate.findMany({
-        where: {
-            status: {
-                in: ["LIVE", "SCHEDULED"],
-            },
-        },
-        include: {
-            bibliography: {
-                orderBy: {
-                    createdAt: "asc",
-                },
-            },
-        },
-        orderBy: {
-            startAt: "asc",
-        },
-    })
+    const queue = await getDebateQueue()
 
     const currentDebate = queue[0] ?? null
     const upcomingDebate = queue[1] ?? null

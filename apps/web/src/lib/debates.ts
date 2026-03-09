@@ -39,6 +39,8 @@ export function toDateTimeLocalValue(date: Date) {
 export async function getDebateQueue() {
     noStore()
 
+    await syncDebateScheduleIfNeeded()
+
     return prisma.debate.findMany({
         where: {
             status: {
@@ -58,8 +60,55 @@ export async function getDebateQueue() {
     })
 }
 
+export async function syncDebateScheduleIfNeeded(now = new Date()) {
+    const pendingTransition = await prisma.debate.findFirst({
+        where: {
+            OR: [
+                {
+                    status: {
+                        in: ["LIVE", "SCHEDULED"],
+                    },
+                    endAt: {
+                        lte: now,
+                    },
+                },
+                {
+                    status: "SCHEDULED",
+                    startAt: {
+                        lte: now,
+                    },
+                    endAt: {
+                        gt: now,
+                    },
+                },
+            ],
+        },
+        select: {
+            id: true,
+        },
+    })
+
+    if (!pendingTransition) {
+        return {
+            now: now.toISOString(),
+            finishedCount: 0,
+            promotedId: null,
+            skipped: true,
+        }
+    }
+
+    const result = await runDebateScheduleTransition(now)
+
+    return {
+        ...result,
+        skipped: false,
+    }
+}
+
 export async function getPublicDebatesData() {
     noStore()
+
+    await syncDebateScheduleIfNeeded()
 
     const [liveDebate, scheduledDebate, pastDebates] = await Promise.all([
         prisma.debate.findFirst({

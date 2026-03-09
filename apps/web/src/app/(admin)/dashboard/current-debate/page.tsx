@@ -3,7 +3,7 @@ import prisma, { type DebateStatus } from "@pensar/db"
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import { DEBATE_STATUS_OPTIONS, toDateTimeLocalValue } from "@/lib/debates"
+import { DEBATE_STATUS_OPTIONS, getDebateQueue, toDateTimeLocalValue } from "@/lib/debates"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
@@ -134,23 +134,8 @@ async function updateCurrentDebateAction(formData: FormData) {
 }
 
 export default async function CurrentDebatePage() {
-    const currentDebate = await prisma.debate.findFirst({
-        where: {
-            status: {
-                in: ["LIVE", "SCHEDULED"],
-            },
-        },
-        include: {
-            bibliography: {
-                orderBy: {
-                    createdAt: "asc",
-                },
-            },
-        },
-        orderBy: {
-            startAt: "asc",
-        },
-    })
+    const queue = await getDebateQueue()
+    const currentDebate = queue[0] ?? null
 
     if (!currentDebate) {
         return (

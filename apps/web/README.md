@@ -49,4 +49,6 @@ Local manual trigger example:
 curl -X POST http://localhost:3000/api/cron/debates -H "Authorization: Bearer $CRON_SECRET"
 ```
 
-Vercel cron is configured in `apps/web/vercel.json` to run every 5 minutes.
+Vercel cron is configured in `apps/web/vercel.json` to run daily (`0 3 * * *`) to stay compatible with Hobby plan limits.
+
+To keep transitions automatic even on Hobby, the app also performs an on-demand sync whenever `/debates` and debate dashboard pages are requested.
