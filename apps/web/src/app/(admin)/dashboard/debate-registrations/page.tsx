@@ -4,19 +4,12 @@ import { ensureAdminSession } from "@/lib/admin-auth"
 import {
     isDebateRegistrationStatus,
     isDebateTeam,
-    STATUS_OPTIONS,
-    TEAM_OPTIONS,
 } from "@/lib/debate-domain"
 import { getHighlightedDebate } from "@/lib/debates"
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
+    RegistrationsClient,
+    type RegistrationRow,
+} from "./registrations-client"
 
 async function updateRegistrationTeamAction(formData: FormData) {
     "use server"
@@ -167,8 +160,15 @@ export default async function DebateRegistrationsPage() {
         ],
     })
 
-    const redTeam = registrations.filter((item) => item.team === "red")
-    const blueTeam = registrations.filter((item) => item.team === "blue")
+    const rows: RegistrationRow[] = registrations.map((r) => ({
+        id: r.id,
+        userName: r.user.name,
+        userEmail: r.user.email,
+        userPhone: r.user.phoneNumber,
+        userPostura: r.user.postura,
+        team: r.team,
+        status: r.status,
+    }))
 
     return (
         <section className="space-y-8">
@@ -177,180 +177,13 @@ export default async function DebateRegistrationsPage() {
                 <p className="text-sm text-muted-foreground">
                     Debate actual: {highlightedDebate.subtitle}
                 </p>
-                <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary">Rojo: {redTeam.length}</Badge>
-                    <Badge variant="secondary">Azul: {blueTeam.length}</Badge>
-                    <Badge variant="secondary">Publico: {registrations.filter((item) => item.team === "public").length}</Badge>
-                </div>
             </div>
 
-            <div className="rounded-xl border border-border bg-card p-4">
-                <h2 className="mb-3 text-lg font-semibold">Listado general</h2>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Nombre</TableHead>
-                            <TableHead>Correo</TableHead>
-                            <TableHead>Numero</TableHead>
-                            <TableHead>Posicion filosofica</TableHead>
-                            <TableHead>Equipo</TableHead>
-                            <TableHead className="text-right">Rol</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {registrations.length === 0 && (
-                            <TableRow>
-                                <TableCell colSpan={6} className="text-center text-muted-foreground">
-                                    No hay usuarios inscritos en este debate.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                        {registrations.map((registration) => (
-                            <TableRow key={registration.id}>
-                                <TableCell className="font-medium">{registration.user.name}</TableCell>
-                                <TableCell>{registration.user.email}</TableCell>
-                                <TableCell>{registration.user.phoneNumber ?? "-"}</TableCell>
-                                <TableCell>{registration.user.postura ?? "-"}</TableCell>
-                                <TableCell>
-                                    <form action={updateRegistrationTeamAction} className="flex items-center gap-2">
-                                        <input type="hidden" name="registrationId" value={registration.id} />
-                                        <select
-                                            name="team"
-                                            defaultValue={registration.team}
-                                            className="h-9 min-w-32 rounded-md border border-input bg-background px-2 text-sm"
-                                        >
-                                            {TEAM_OPTIONS.map((option) => (
-                                                <option key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <button
-                                            type="submit"
-                                            className="h-9 rounded-md border border-input px-3 text-xs font-medium hover:bg-accent"
-                                        >
-                                            Guardar
-                                        </button>
-                                    </form>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <Badge variant="outline">{registration.status}</Badge>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-2">
-                <div className="rounded-xl border border-border bg-card p-4">
-                    <h3 className="mb-1 text-lg font-semibold">Equipo Rojo</h3>
-                    <p className="mb-3 text-xs text-muted-foreground">Selecciona 3 titulares y 2 reservas.</p>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Nombre</TableHead>
-                                <TableHead>Estado</TableHead>
-                                <TableHead className="text-right">Rol</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {redTeam.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={3} className="text-center text-muted-foreground">
-                                        Sin inscritos en rojo.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                            {redTeam.map((registration) => (
-                                <TableRow key={registration.id}>
-                                    <TableCell>{registration.user.name}</TableCell>
-                                    <TableCell>
-                                        <form action={updateRegistrationStatusAction} className="flex items-center gap-2">
-                                            <input type="hidden" name="registrationId" value={registration.id} />
-                                            <select
-                                                key={`${registration.id}-${registration.status}`}
-                                                name="status"
-                                                defaultValue={registration.status}
-                                                className="h-9 min-w-36 rounded-md border border-input bg-background px-2 text-sm"
-                                            >
-                                                {STATUS_OPTIONS.map((option) => (
-                                                    <option key={option.value} value={option.value}>
-                                                        {option.label}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            <button
-                                                type="submit"
-                                                className="h-9 rounded-md border border-input px-3 text-xs font-medium hover:bg-accent"
-                                            >
-                                                Guardar
-                                            </button>
-                                        </form>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <Badge variant="outline">{registration.status}</Badge>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-
-                <div className="rounded-xl border border-border bg-card p-4">
-                    <h3 className="mb-1 text-lg font-semibold">Equipo Azul</h3>
-                    <p className="mb-3 text-xs text-muted-foreground">Selecciona 3 titulares y 2 reservas.</p>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Nombre</TableHead>
-                                <TableHead>Estado</TableHead>
-                                <TableHead className="text-right">Rol</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {blueTeam.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={3} className="text-center text-muted-foreground">
-                                        Sin inscritos en azul.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                            {blueTeam.map((registration) => (
-                                <TableRow key={registration.id}>
-                                    <TableCell>{registration.user.name}</TableCell>
-                                    <TableCell>
-                                        <form action={updateRegistrationStatusAction} className="flex items-center gap-2">
-                                            <input type="hidden" name="registrationId" value={registration.id} />
-                                            <select
-                                                key={`${registration.id}-${registration.status}`}
-                                                name="status"
-                                                defaultValue={registration.status}
-                                                className="h-9 min-w-36 rounded-md border border-input bg-background px-2 text-sm"
-                                            >
-                                                {STATUS_OPTIONS.map((option) => (
-                                                    <option key={option.value} value={option.value}>
-                                                        {option.label}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            <button
-                                                type="submit"
-                                                className="h-9 rounded-md border border-input px-3 text-xs font-medium hover:bg-accent"
-                                            >
-                                                Guardar
-                                            </button>
-                                        </form>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <Badge variant="outline">{registration.status}</Badge>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-            </div>
+            <RegistrationsClient
+                registrations={rows}
+                updateTeamAction={updateRegistrationTeamAction}
+                updateStatusAction={updateRegistrationStatusAction}
+            />
         </section>
     )
 }

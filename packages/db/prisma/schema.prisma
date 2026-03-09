@@ -150,3 +150,30 @@ model DebateBibliography {
   @@index([debateId])
   @@map("debate_bibliography")
 }
+
+model LibraryCategory {
+  id        String             @id @default(cuid())
+  name      String             @unique
+  icon      String             @default("FolderOpen")
+  order     Int                @default(0)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  documents LibraryDocument[]
+
+  @@map("library_category")
+}
+
+model LibraryDocument {
+  id          String          @id @default(cuid())
+  title       String
+  description String?
+  fileName    String
+  storagePath String
+  categoryId  String
+  category    LibraryCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([categoryId])
+  @@map("library_document")
+}

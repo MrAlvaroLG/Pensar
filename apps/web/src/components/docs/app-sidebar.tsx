@@ -1,7 +1,9 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { ChevronDown, FileText, Search } from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { ChevronDown, FileText, Search, FolderOpen } from "lucide-react"
 
 import {
     Sidebar,
@@ -26,31 +28,41 @@ import {
     InputGroupInput,
 } from "@/components/ui/input-group"
 
-import { DOCUMENT_GROUPS, type Document } from "@/components/docs/data"
+export interface SidebarDocument {
+    id: string
+    title: string
+    description: string | null
+}
+
+export interface SidebarCategory {
+    id: string
+    name: string
+    icon: string
+    documents: SidebarDocument[]
+}
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-    selectedDocId?: string | null
-    onSelectDocument?: (doc: Document) => void
+    categories: SidebarCategory[]
 }
 
 export function AppSidebar({
-    selectedDocId,
-    onSelectDocument,
+    categories,
     ...props
 }: AppSidebarProps) {
     const [search, setSearch] = useState("")
+    const pathname = usePathname()
 
     const filteredGroups = useMemo(() => {
-        if (!search.trim()) return DOCUMENT_GROUPS
+        if (!search.trim()) return categories
 
         const query = search.toLowerCase()
-        return DOCUMENT_GROUPS.map((group) => ({
+        return categories.map((group) => ({
         ...group,
         documents: group.documents.filter((doc) =>
             doc.title.toLowerCase().includes(query)
         ),
         })).filter((group) => group.documents.length > 0)
-    }, [search])
+    }, [search, categories])
 
     return (
         <Sidebar className="top-16 h-[calc(100svh-4rem)]!" {...props}>
@@ -75,12 +87,12 @@ export function AppSidebar({
             )}
 
             {filteredGroups.map((group) => (
-            <Collapsible key={group.label} defaultOpen className="group/collapsible">
+            <Collapsible key={group.id} defaultOpen className="group/collapsible">
                 <SidebarGroup>
                 <SidebarGroupLabel asChild>
                     <CollapsibleTrigger className="flex w-full items-center gap-2">
-                    <group.icon className="size-4" />
-                    <span className="flex-1 text-left">{group.label}</span>
+                    <FolderOpen className="size-4" />
+                    <span className="flex-1 text-left">{group.name}</span>
                     <ChevronDown className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
                     </CollapsibleTrigger>
                 </SidebarGroupLabel>
@@ -91,12 +103,14 @@ export function AppSidebar({
                         {group.documents.map((doc) => (
                         <SidebarMenuItem key={doc.id}>
                             <SidebarMenuButton
-                            isActive={selectedDocId === doc.id}
+                            asChild
+                            isActive={pathname === `/docs/${doc.id}`}
                             tooltip={doc.description ?? doc.title}
-                            onClick={() => onSelectDocument?.(doc)}
                             >
-                            <FileText className="size-4" />
+                            <Link href={`/docs/${doc.id}`}>
+                                <FileText className="size-4" />
                                 <span>{doc.title}</span>
+                            </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                         ))}
