@@ -16,6 +16,7 @@ import {
 import BlurText from "@/components/text/blur"
 import { motion } from "framer-motion"
 import Link from "next/link"
+import type { ViewerTeam } from "@/lib/debate-domain"
 import type { PublicDebate, PublicPastDebate } from "@/lib/debates"
 
 const BLUR_FROM = { filter: "blur(10px)", opacity: 0, y: -50 }
@@ -23,6 +24,44 @@ const BLUR_TO = [
     { filter: "blur(5px)", opacity: 0.5, y: 5 },
     { filter: "blur(0px)", opacity: 1, y: 0 },
 ]
+
+const TEAM_CONFIG: Record<Exclude<ViewerTeam, "none">, {
+    label: string
+    actionLabel: string
+    roleSummary: string
+    accentText: string
+    accentBg: string
+    ring: string
+    glow: string
+}> = {
+    red: {
+        label: "Equipo Rojo",
+        actionLabel: "Atacas la moción",
+        roleSummary: "Tu equipo cuestiona la moción, presenta objeciones y busca refutar al equipo azul.",
+        accentText: "text-red-700",
+        accentBg: "bg-red-600/15",
+        ring: "ring-red-600/30",
+        glow: "from-red-500/20 via-red-500/8 to-transparent",
+    },
+    blue: {
+        label: "Equipo Azul",
+        actionLabel: "Defiendes la moción",
+        roleSummary: "Tu equipo sostiene la moción con argumentos, evidencia y respuestas a las refutaciones.",
+        accentText: "text-blue-700",
+        accentBg: "bg-blue-600/15",
+        ring: "ring-blue-600/30",
+        glow: "from-blue-500/20 via-blue-500/8 to-transparent",
+    },
+    public: {
+        label: "Publico",
+        actionLabel: "Observas y preguntas",
+        roleSummary: "Escuchas ambos equipos, evaluas los argumentos y participas en la ronda de preguntas.",
+        accentText: "text-slate-700",
+        accentBg: "bg-slate-500/15",
+        ring: "ring-slate-500/30",
+        glow: "from-slate-500/20 via-slate-500/8 to-transparent",
+    },
+}
 
 const fadeIn = (delay = 0) => ({
     initial: { opacity: 0, y: 20, filter: "blur(8px)" },
@@ -39,7 +78,7 @@ function ThesisCard({ debate }: { debate: PublicDebate }) {
             <span className="absolute left-4 top-3 font-serif text-5xl text-muted-foreground/20">
                 &ldquo;
             </span>
-            <p className="text-lg mt-2 font-medium text-foreground">
+            <p className="mt-2 text-lg font-medium text-foreground">
                 {debate.thesis}
             </p>
             <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -63,24 +102,26 @@ function TeamCard({
         red: {
             icon: Gavel,
             title: "Unirse al Equipo Rojo",
-            description: "Defender la moción: Debatir como titular o reserva.",
+            description: "Ataca la moción. Tu rol es cuestionar y refutar la defensa del equipo azul.",
             accentText: "text-red-700",
             accentBg: "bg-red-700",
             accentBgLight: "bg-red-50 dark:bg-red-900/20",
             hoverText: "group-hover:text-red-700",
             barPosition: "left-0",
             align: "text-start",
+            href: "/debates/unirse/rojo",
         },
         blue: {
             icon: Shield,
             title: "Unirse al Equipo Azul",
-            description: "Oponerse a la moción: Debatir como titular o reserva.",
+            description: "Defiende la moción. Tu rol es construir argumentos y responder ataques del rojo.",
             accentText: "text-blue-700",
             accentBg: "bg-blue-700",
             accentBgLight: "bg-blue-50 dark:bg-blue-900/20",
             hoverText: "group-hover:text-blue-700",
             barPosition: "right-0",
             align: "text-end",
+            href: "/debates/unirse/azul",
         },
     }[team]
 
@@ -89,7 +130,7 @@ function TeamCard({
     return (
         <motion.div {...fadeIn(delay)}>
             <Link
-                href="/signup"
+                href={config.href}
                 className={`group relative flex h-full flex-col justify-between overflow-hidden rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${!isRed ? "text-right" : ""}`}
             >
                 <div className={`absolute ${config.barPosition} top-0 h-full w-1 ${config.accentBg}`} />
@@ -108,7 +149,7 @@ function TeamCard({
                 </div>
 
                 <div className={`mt-4 flex items-center text-sm font-semibold ${config.accentText} ${!isRed ? "justify-end" : ""}`}>
-                    Registrarse
+                    Revisar rol y confirmar
                     <ArrowRight className="ml-1 size-4 transition-transform group-hover:translate-x-1" />
                 </div>
             </Link>
@@ -120,8 +161,8 @@ function AudienceCard() {
     return (
         <motion.div {...fadeIn(0.6)} className="md:col-span-2">
             <Link
-                href="/signup"
-                className="group flex flex-col items-center justify-between gap-4 overflow-hidden rounded-xl border border-border bg-card p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:p-6 md:flex-row"
+                href="/debates/unirse/publico"
+                className="group flex flex-col items-center justify-between gap-4 overflow-hidden rounded-xl border border-border bg-card p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:flex-row md:p-6"
             >
                 <div className="flex w-full flex-col items-center gap-3 md:flex-row md:gap-4">
                     <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
@@ -129,18 +170,57 @@ function AudienceCard() {
                     </div>
                     <div className="text-center md:text-left">
                         <h3 className="text-lg font-bold text-foreground md:text-xl">
-                            Asistir como Público
+                            Unirse como Publico
                         </h3>
                         <p className="mt-1 text-xs text-muted-foreground md:text-sm">
-                            Escuchar los argumentos y participar en la sesión de preguntas.
+                            Observas el debate y participas en preguntas al final.
                         </p>
                     </div>
                 </div>
                 <div className="flex w-full items-center justify-center text-xs font-semibold text-foreground md:justify-end md:text-sm">
-                    Reservar lugar
+                    Revisar rol y confirmar
                     <ArrowRight className="ml-1 size-4 transition-transform group-hover:translate-x-1" />
                 </div>
             </Link>
+        </motion.div>
+    )
+}
+
+function SelectionLockedCard({
+    viewerTeam,
+    highlightedDebate,
+}: {
+    viewerTeam: Exclude<ViewerTeam, "none">
+    highlightedDebate: PublicDebate | null
+}) {
+    const config = TEAM_CONFIG[viewerTeam]
+
+    return (
+        <motion.div
+            {...fadeIn(0.45)}
+            className={`mt-10 w-full max-w-4xl rounded-2xl border border-border p-6 ring-1 ${config.ring} ${config.accentBg}`}
+        >
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Inscripcion completada
+            </p>
+            <h3 className={`mt-2 text-2xl font-bold ${config.accentText}`}>
+                Estas inscrito en {config.label}
+            </h3>
+            <p className="mt-2 text-sm text-foreground/90">
+                {config.actionLabel}. Esta decision es irreversible y los demas botones ya no estan disponibles.
+            </p>
+            {highlightedDebate && (
+                <div className="mt-4 rounded-lg border border-border/60 bg-background/70 p-4 text-left">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Mocion del proximo debate</p>
+                    <p className="mt-1 text-base font-semibold text-foreground">
+                        {highlightedDebate.subtitle}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        {highlightedDebate.question}
+                    </p>
+                    <p className="mt-2 text-sm text-foreground/90">{config.roleSummary}</p>
+                </div>
+            )}
         </motion.div>
     )
 }
@@ -170,11 +250,11 @@ function PastDebateCard({ debate, index }: { debate: PublicPastDebate; index: nu
                     </button>
                     <button className="flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
                         <BookOpen className="size-3.5" />
-                        Bibliografía
+                        Bibliografia
                     </button>
                     <button className="ml-auto flex items-center gap-1.5 rounded bg-red-50 px-2 py-1 text-xs font-bold text-red-700 transition-colors hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30">
                         <PlayCircle className="size-3.5" />
-                        Grabación
+                        Grabacion
                     </button>
                 </div>
             </div>
@@ -185,18 +265,29 @@ function PastDebateCard({ debate, index }: { debate: PublicPastDebate; index: nu
 export function DebatesPageClient({
     highlightedDebate,
     pastDebates,
+    viewerTeam,
+    isLoggedIn,
 }: {
     highlightedDebate: PublicDebate | null
     pastDebates: PublicPastDebate[]
+    viewerTeam: ViewerTeam
+    isLoggedIn: boolean
 }) {
+    const hasSelectedTeam = viewerTeam !== "none"
+    const selectedConfig = hasSelectedTeam ? TEAM_CONFIG[viewerTeam] : null
+
     return (
         <div className="relative overflow-hidden">
+            {selectedConfig && (
+                <div className={`pointer-events-none absolute inset-0 -z-10 bg-linear-to-b ${selectedConfig.glow}`} />
+            )}
+
             <section className="mx-auto max-w-6xl px-4 pb-24">
                 <div className="flex flex-col items-center text-center">
                     <motion.div {...fadeIn(0)}>
                         <Badge variant="secondary" className="mt-8 text-sm">
                             <Clock className="size-3.5" />
-                            Próximo Debate
+                            Proximo Debate
                         </Badge>
                     </motion.div>
 
@@ -240,19 +331,34 @@ export function DebatesPageClient({
                         <div className="mt-10 max-w-2xl rounded-xl border border-border bg-card p-8 text-center">
                             <h2 className="text-2xl font-semibold text-foreground">Sin debate programado</h2>
                             <p className="mt-3 text-muted-foreground">
-                                El equipo de administración aún no ha publicado el próximo debate.
+                                El equipo de administracion aun no ha publicado el proximo debate.
                             </p>
                         </div>
                     )}
 
-                    <div className="relative mt-10 grid w-full max-w-4xl grid-cols-1 gap-6 md:grid-cols-2">
-                        <div className="pointer-events-none absolute -left-32 top-1/3 -z-10 h-80 w-80 -translate-y-1/2 rounded-full bg-red-500/15 blur-[100px]" />
-                        <div className="pointer-events-none absolute -right-32 top-1/3 -z-10 h-80 w-80 -translate-y-1/2 rounded-full bg-blue-500/15 blur-[100px]" />
+                    {hasSelectedTeam ? (
+                        <SelectionLockedCard
+                            viewerTeam={viewerTeam}
+                            highlightedDebate={highlightedDebate}
+                        />
+                    ) : (
+                        <>
+                            <div className="relative mt-10 grid w-full max-w-4xl grid-cols-1 gap-6 md:grid-cols-2">
+                                <div className="pointer-events-none absolute -left-32 top-1/3 -z-10 h-80 w-80 -translate-y-1/2 rounded-full bg-red-500/15 blur-[100px]" />
+                                <div className="pointer-events-none absolute -right-32 top-1/3 -z-10 h-80 w-80 -translate-y-1/2 rounded-full bg-blue-500/15 blur-[100px]" />
 
-                        <TeamCard team="red" delay={0.4} />
-                        <TeamCard team="blue" delay={0.5} />
-                        <AudienceCard />
-                    </div>
+                                <TeamCard team="red" delay={0.4} />
+                                <TeamCard team="blue" delay={0.5} />
+                                <AudienceCard />
+                            </div>
+
+                            {!isLoggedIn && (
+                                <p className="mt-4 rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+                                    Necesitas iniciar sesion para confirmar tu equipo.
+                                </p>
+                            )}
+                        </>
+                    )}
                 </div>
             </section>
 

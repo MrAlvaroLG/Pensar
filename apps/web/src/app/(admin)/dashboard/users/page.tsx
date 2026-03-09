@@ -8,10 +8,9 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { UserRowActions } from "../../../../components/admin/user-row-actions"
-import { auth } from "@/lib/auth"
+import { ensureAdminSession } from "@/lib/admin-auth"
 import prisma from "@pensar/db"
 import { revalidatePath } from "next/cache"
-import { headers } from "next/headers"
 
 interface UserRow {
     id: string
@@ -25,13 +24,7 @@ interface UserRow {
 async function deleteUserAction(formData: FormData) {
     "use server"
 
-    const session = await auth.api.getSession({
-        headers: await headers(),
-    })
-
-    if (!session || session.user.role !== "ADMIN") {
-        throw new Error("No autorizado")
-    }
+    const session = await ensureAdminSession()
 
     const userId = formData.get("userId")
 
@@ -55,13 +48,7 @@ async function deleteUserAction(formData: FormData) {
 async function makeUserAdminAction(formData: FormData) {
     "use server"
 
-    const session = await auth.api.getSession({
-        headers: await headers(),
-    })
-
-    if (!session || session.user.role !== "ADMIN") {
-        throw new Error("No autorizado")
-    }
+    await ensureAdminSession()
 
     const userId = formData.get("userId")
 

@@ -3,6 +3,7 @@
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react"
 import { Camera, LoaderCircle } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
+import { isPosturaValue, POSTURA_OPTIONS, type PosturaValue } from "@/lib/debate-domain"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -27,7 +28,7 @@ interface ProfileDialogUser {
     name?: string | null
     email?: string | null
     image?: string | null
-    postura?: string | null
+    postura?: PosturaValue | null
     phoneNumber?: string | null
 }
 
@@ -36,15 +37,6 @@ interface ProfileDialogProps {
     onOpenChange: (open: boolean) => void
     user: ProfileDialogUser
 }
-
-const POSTURA_OPTIONS = [
-    { value: "TEISTA", label: "Teista" },
-    { value: "ATEO", label: "Ateo" },
-    { value: "AGNOSTICO", label: "Agnostico" },
-    { value: "DEISTA", label: "Deista" },
-    { value: "PANTEISTA", label: "Panteista" },
-    { value: "OTRO", label: "Otro" },
-]
 
 const E164_PHONE_REGEX = /^\+[1-9]\d{1,14}$/
 
@@ -59,7 +51,7 @@ function getInitials(name: string): string {
 
 export default function ProfileDialog({ open, onOpenChange, user }: ProfileDialogProps) {
     const [name, setName] = useState(user.name ?? "")
-    const [postura, setPostura] = useState(user.postura ?? "OTRO")
+    const [postura, setPostura] = useState<PosturaValue>(user.postura ?? "OTRO")
     const [phoneNumber, setPhoneNumber] = useState(user.phoneNumber ?? "")
     const [imageDataUrl, setImageDataUrl] = useState<string | null>(user.image ?? null)
     const [isSaving, setIsSaving] = useState(false)
@@ -215,7 +207,14 @@ export default function ProfileDialog({ open, onOpenChange, user }: ProfileDialo
 
                         <div className="grid gap-2">
                             <Label htmlFor="profile-postura">Postura</Label>
-                            <Select value={postura} onValueChange={setPostura}>
+                            <Select
+                                value={postura}
+                                onValueChange={(value) => {
+                                    if (isPosturaValue(value)) {
+                                        setPostura(value)
+                                    }
+                                }}
+                            >
                                 <SelectTrigger id="profile-postura" className="w-full">
                                     <SelectValue placeholder="Selecciona tu postura" />
                                 </SelectTrigger>

@@ -1,8 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { authClient } from "@/lib/auth-client"
+import {
+    getStatusLabel,
+    getTeamLabel,
+    type DebateRegistrationStatus,
+    type DebateTeam,
+    isPosturaValue,
+    type PosturaValue,
+} from "@/lib/debate-domain"
 import {
     LogOut,
     User,
@@ -34,6 +42,54 @@ export default function UserMenu() {
     const router = useRouter()
     const [isProfileOpen, setIsProfileOpen] = useState(false)
     const { data: session, isPending } = authClient.useSession()
+    const userId = session?.user?.id
+    const [registration, setRegistration] = useState<{
+        debateTitle: string
+        team: DebateTeam
+        status: DebateRegistrationStatus
+    } | null>(null)
+
+    useEffect(() => {
+        if (!userId) {
+            return
+        }
+
+        let isMounted = true
+
+        const loadRegistrationStatus = async () => {
+            try {
+                const response = await fetch("/api/debates/registration-status", {
+                    method: "GET",
+                })
+
+                if (!response.ok) {
+                    return
+                }
+
+                const payload = await response.json() as {
+                    registration?: {
+                        debateTitle: string
+                        team: DebateTeam
+                        status: DebateRegistrationStatus
+                    } | null
+                }
+
+                if (isMounted) {
+                    setRegistration(payload.registration ?? null)
+                }
+            } catch {
+                if (isMounted) {
+                    setRegistration(null)
+                }
+            }
+        }
+
+        loadRegistrationStatus()
+
+        return () => {
+            isMounted = false
+        }
+    }, [userId])
 
     if (isPending) {
         return <Skeleton className="size-8 rounded-full" />
@@ -48,10 +104,17 @@ export default function UserMenu() {
     const initials = getInitials(displayName)
     const userData = user as {
         role?: string
-        postura?: string | null
+        postura?: PosturaValue | null
         phoneNumber?: string | null
     }
     const userRole = userData.role
+    const registrationInfo = userId ? registration : null
+    const safePostura = userData.postura && isPosturaValue(userData.postura)
+        ? userData.postura
+        : null
+
+    const teamLabel = registrationInfo ? getTeamLabel(registrationInfo.team) : ""
+    const statusLabel = registrationInfo ? getStatusLabel(registrationInfo.status) : ""
 
     const handleSignOut = async () => {
         await authClient.signOut({
@@ -130,6 +193,17 @@ export default function UserMenu() {
                         </DropdownMenuItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
+                    {registrationInfo && (
+                        <>
+                            <DropdownMenuLabel className="font-normal">
+                                <div className="space-y-1">
+                                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Estado en debate</p>
+                                    <p className="text-sm font-medium">{statusLabel} - Equipo {teamLabel}</p>
+                                </div>
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                        </>
+                    )}
                     <DropdownMenuItem
                         onClick={handleSignOut}
                         variant="destructive"
@@ -148,7 +222,7 @@ export default function UserMenu() {
                     name: user.name,
                     email: user.email,
                     image: user.image,
-                    postura: userData.postura,
+                    postura: safePostura,
                     phoneNumber: userData.phoneNumber,
                 }}
             />

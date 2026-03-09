@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { authClient } from "@/lib/auth-client"
+import { POSTURA_OPTIONS } from "@/lib/debate-domain"
 import { Button } from "@/components/ui/button"
 import {
     Card,
@@ -26,15 +27,6 @@ import { Label } from "@/components/ui/label"
 import { AuthLink } from "@/components/auth/auth-link"
 import { PasswordInput } from "@/components/auth/password-input"
 import { PasswordStrength, validatePassword } from "@/components/auth/password-strength"
-
-const POSTURA_OPTIONS = [
-    { value: "TEISTA", label: "Teísta" },
-    { value: "ATEO", label: "Ateo" },
-    { value: "AGNOSTICO", label: "Agnóstico" },
-    { value: "DEISTA", label: "Deísta" },
-    { value: "PANTEISTA", label: "Panteísta" },
-    { value: "OTRO", label: "Otra / Prefiero no decir" },
-] as const
 
 export default function SignUpPage() {
     const router = useRouter()

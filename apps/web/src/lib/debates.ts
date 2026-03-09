@@ -1,5 +1,6 @@
 import prisma, { DebateStatus } from "@pensar/db"
 import { unstable_noStore as noStore } from "next/cache"
+import { isDebateTeam, type DebateRegistrationStatus, type DebateTeam } from "@/lib/debate-domain"
 
 export interface PublicDebate {
     id: string
@@ -17,10 +18,40 @@ export interface PublicPastDebate {
     dateLabel: string
 }
 
+export interface ViewerDebateRegistration {
+    debateId: string
+    debateTitle: string
+    team: DebateTeam
+    status: DebateRegistrationStatus
+}
+
 const DATE_FORMATTER = new Intl.DateTimeFormat("es-ES", {
     dateStyle: "medium",
     timeStyle: "short",
 })
+
+async function getHighlightedDebateRecord() {
+    const [liveDebate, scheduledDebate] = await Promise.all([
+        prisma.debate.findFirst({
+            where: {
+                status: "LIVE",
+            },
+            orderBy: {
+                startAt: "asc",
+            },
+        }),
+        prisma.debate.findFirst({
+            where: {
+                status: "SCHEDULED",
+            },
+            orderBy: {
+                startAt: "asc",
+            },
+        }),
+    ])
+
+    return liveDebate ?? scheduledDebate
+}
 
 function formatDebateRange(startAt: Date, endAt: Date) {
     return `${DATE_FORMATTER.format(startAt)} - ${DATE_FORMATTER.format(endAt)}`
@@ -110,37 +141,8 @@ export async function getPublicDebatesData() {
 
     await syncDebateScheduleIfNeeded()
 
-    const [liveDebate, scheduledDebate, pastDebates] = await Promise.all([
-        prisma.debate.findFirst({
-            where: {
-                status: "LIVE",
-            },
-            include: {
-                bibliography: {
-                    orderBy: {
-                        createdAt: "asc",
-                    },
-                },
-            },
-            orderBy: {
-                startAt: "asc",
-            },
-        }),
-        prisma.debate.findFirst({
-            where: {
-                status: "SCHEDULED",
-            },
-            include: {
-                bibliography: {
-                    orderBy: {
-                        createdAt: "asc",
-                    },
-                },
-            },
-            orderBy: {
-                startAt: "asc",
-            },
-        }),
+    const [highlightedDebate, pastDebates] = await Promise.all([
+        getHighlightedDebateRecord(),
         prisma.debate.findMany({
             where: {
                 status: "FINISHED",
@@ -151,8 +153,6 @@ export async function getPublicDebatesData() {
             take: 6,
         }),
     ])
-
-    const highlightedDebate = liveDebate ?? scheduledDebate
 
     return {
         highlightedDebate: highlightedDebate
@@ -171,6 +171,46 @@ export async function getPublicDebatesData() {
             quote: debate.thesis,
             dateLabel: DATE_FORMATTER.format(debate.endAt),
         } satisfies PublicPastDebate)),
+    }
+}
+
+export async function getHighlightedDebate() {
+    noStore()
+
+    await syncDebateScheduleIfNeeded()
+
+    return getHighlightedDebateRecord()
+}
+
+export async function getUserRegistrationForHighlightedDebate(userId: string): Promise<ViewerDebateRegistration | null> {
+    const highlightedDebate = await getHighlightedDebate()
+
+    if (!highlightedDebate) {
+        return null
+    }
+
+    const registration = await prisma.debateRegistration.findUnique({
+        where: {
+            userId_debateId: {
+                userId,
+                debateId: highlightedDebate.id,
+            },
+        },
+    })
+
+    if (!registration) {
+        return null
+    }
+
+    if (!isDebateTeam(registration.team)) {
+        return null
+    }
+
+    return {
+        debateId: highlightedDebate.id,
+        debateTitle: highlightedDebate.subtitle,
+        team: registration.team,
+        status: registration.status,
     }
 }
 

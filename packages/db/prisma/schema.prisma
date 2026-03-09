@@ -27,6 +27,19 @@ enum DebateStatus {
   FINISHED
 }
 
+enum Team {
+  none
+  red
+  blue
+  public
+}
+
+enum RegistrationStatus {
+  participant
+  orator
+  reserve
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -36,10 +49,13 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  postura       Postura?
+  postura       Postura   @default(OTRO)
   phoneNumber   String?
   sessions      Session[]
   accounts      Account[]
+  registrations DebateRegistration[]
+
+  @@index([role])
   @@map("user")
 }
 
@@ -98,10 +114,29 @@ model Debate {
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
   bibliography DebateBibliography[]
+  registrations DebateRegistration[]
 
   @@index([status, startAt])
   @@index([endAt])
   @@map("debate")
+}
+
+model DebateRegistration {
+  id        String             @id @default(cuid())
+  userId    String
+  debateId  String
+  team      Team
+  status    RegistrationStatus @default(participant)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  debate    Debate             @relation(fields: [debateId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, debateId])
+  @@index([debateId, team, status])
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@map("debate_registration")
 }
 
 model DebateBibliography {

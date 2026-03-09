@@ -38,6 +38,7 @@ const ADMIN_SECTIONS = [
         items: [
             { label: "Debate Actual", href: "/dashboard/current-debate", icon: Gavel },
             { label: "Debate Proximo", href: "/dashboard/upcoming-debate", icon: Megaphone },
+            { label: "Usuarios Inscritos", href: "/dashboard/debate-registrations", icon: Users },
         ],
         
     },
