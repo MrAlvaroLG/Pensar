@@ -68,16 +68,47 @@ async function makeUserAdminAction(formData: FormData) {
     revalidatePath("/dashboard/users")
 }
 
+async function removeAdminAction(formData: FormData) {
+    "use server"
+
+    const session = await ensureAdminSession()
+
+    const userId = formData.get("userId")
+
+    if (typeof userId !== "string" || userId.length === 0) {
+        throw new Error("ID de usuario inválido")
+    }
+
+    if (userId === session.user.id) {
+        throw new Error("No puedes quitarte el rol de administrador a ti mismo")
+    }
+
+    await prisma.user.update({
+        where: {
+            id: userId,
+        },
+        data: {
+            role: "USER",
+        },
+    })
+
+    revalidatePath("/dashboard/users")
+}
+
 function UsersSectionTable({
     users,
     title,
     emptyMessage,
     canPromote,
+    canDemote = false,
+    currentUserId,
 }: {
     users: UserRow[]
     title: string
     emptyMessage: string
     canPromote: boolean
+    canDemote?: boolean
+    currentUserId?: string
 }) {
     return (
         <section className="space-y-2">
@@ -112,8 +143,10 @@ function UsersSectionTable({
                                     userId={user.id}
                                     userName={user.name}
                                     canPromote={canPromote}
+                                    canDemote={canDemote && user.id !== currentUserId}
                                     onDelete={deleteUserAction}
                                     onPromote={makeUserAdminAction}
+                                    onDemote={removeAdminAction}
                                 />
                             </TableCell>
                         </TableRow>
@@ -125,6 +158,8 @@ function UsersSectionTable({
 }
 
 export default async function DashboardUsersPage() {
+    const session = await ensureAdminSession()
+
     const users = await prisma.user.findMany({
         select: {
             id: true,
@@ -149,6 +184,8 @@ export default async function DashboardUsersPage() {
                 title="Administradores"
                 emptyMessage="No hay administradores registrados."
                 canPromote={false}
+                canDemote
+                currentUserId={session.user.id}
             />
             <UsersSectionTable
                 users={standardUsers}

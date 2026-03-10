@@ -5,10 +5,17 @@ import { Document, Page, pdfjs } from "react-pdf"
 import "react-pdf/dist/Page/AnnotationLayer.css"
 import "react-pdf/dist/Page/TextLayer.css"
 import { Download, Loader2 } from "lucide-react"
+import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
+
+const fadeIn = (delay = 0) => ({
+    initial: { opacity: 0, y: 20, filter: "blur(8px)" },
+    animate: { opacity: 1, y: 0, filter: "blur(0px)" },
+    transition: { duration: 0.8, delay, ease: "easeOut" as const },
+})
 
 interface PdfViewerProps {
     url: string
@@ -26,7 +33,7 @@ export function PdfViewer({ url, title, description }: PdfViewerProps) {
 
     return (
         <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <motion.div {...fadeIn(0)} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold">{title}</h1>
                     {description && (
@@ -39,10 +46,10 @@ export function PdfViewer({ url, title, description }: PdfViewerProps) {
                         Descargar PDF
                     </a>
                 </Button>
-            </div>
+            </motion.div>
 
             {error ? (
-                <div className="flex flex-col items-center gap-2 py-16 text-center">
+                <motion.div {...fadeIn(0.1)} className="flex flex-col items-center gap-2 py-16 text-center">
                     <p className="text-muted-foreground text-sm">
                         No se pudo cargar el documento. Puedes descargarlo directamente.
                     </p>
@@ -52,9 +59,9 @@ export function PdfViewer({ url, title, description }: PdfViewerProps) {
                             Descargar PDF
                         </a>
                     </Button>
-                </div>
+                </motion.div>
             ) : (
-                <div className="flex flex-col items-center gap-4">
+                <motion.div {...fadeIn(0.1)} className="flex flex-col items-center gap-4">
                     <Document
                         file={url}
                         onLoadSuccess={onDocumentLoadSuccess}
@@ -82,7 +89,7 @@ export function PdfViewer({ url, title, description }: PdfViewerProps) {
                             {numPages} {numPages === 1 ? "página" : "páginas"}
                         </p>
                     )}
-                </div>
+                </motion.div>
             )}
         </div>
     )

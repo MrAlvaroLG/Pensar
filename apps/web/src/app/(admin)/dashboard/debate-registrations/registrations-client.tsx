@@ -7,10 +7,23 @@ import {
     getFilteredRowModel,
     useReactTable,
 } from "@tanstack/react-table"
-import { Search } from "lucide-react"
+import { Search, Trash2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/ui/data-table"
+import { SubmitButton } from "@/components/admin/submit-button"
+import { DashboardCard } from "@/components/admin/dashboard-card"
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
 import {
     Select,
     SelectContent,
@@ -52,14 +65,17 @@ interface RegistrationsClientProps {
     registrations: RegistrationRow[]
     updateTeamAction: (formData: FormData) => Promise<void>
     updateStatusAction: (formData: FormData) => Promise<void>
+    deleteAction: (formData: FormData) => Promise<void>
 }
 
 function TeamActionCell({
     registration,
     action,
+    onError,
 }: {
     registration: RegistrationRow
     action: (formData: FormData) => Promise<void>
+    onError: (message: string) => void
 }) {
     const [pending, startTransition] = useTransition()
     const formRef = useRef<HTMLFormElement>(null)
@@ -67,7 +83,15 @@ function TeamActionCell({
     return (
         <form
             ref={formRef}
-            action={(formData) => startTransition(() => action(formData))}
+            action={(formData) =>
+                startTransition(async () => {
+                    try {
+                        await action(formData)
+                    } catch (err) {
+                        onError(err instanceof Error ? err.message : "Error al cambiar equipo")
+                    }
+                })
+            }
         >
             <input type="hidden" name="registrationId" value={registration.id} />
             <select
@@ -90,9 +114,11 @@ function TeamActionCell({
 function StatusActionCell({
     registration,
     action,
+    onError,
 }: {
     registration: RegistrationRow
     action: (formData: FormData) => Promise<void>
+    onError: (message: string) => void
 }) {
     const [pending, startTransition] = useTransition()
     const formRef = useRef<HTMLFormElement>(null)
@@ -100,7 +126,15 @@ function StatusActionCell({
     return (
         <form
             ref={formRef}
-            action={(formData) => startTransition(() => action(formData))}
+            action={(formData) =>
+                startTransition(async () => {
+                    try {
+                        await action(formData)
+                    } catch (err) {
+                        onError(err instanceof Error ? err.message : "Error al cambiar estado")
+                    }
+                })
+            }
         >
             <input type="hidden" name="registrationId" value={registration.id} />
             <select
@@ -121,9 +155,58 @@ function StatusActionCell({
     )
 }
 
+function DeleteActionCell({
+    registration,
+    action,
+    onError,
+}: {
+    registration: RegistrationRow
+    action: (formData: FormData) => Promise<void>
+    onError: (message: string) => void
+}) {
+    const [open, setOpen] = useState(false)
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button type="button" variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                    <Trash2 className="size-4" />
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Confirmar eliminación</DialogTitle>
+                    <DialogDescription>
+                        ¿Seguro que quieres eliminar la inscripción de {registration.userName}? Esta acción no se puede deshacer.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="flex flex-row justify-between">
+                    <DialogClose asChild>
+                        <Button type="button" variant="outline">Cancelar</Button>
+                    </DialogClose>
+                    <form action={async (formData) => {
+                        try {
+                            await action(formData)
+                            setOpen(false)
+                        } catch (err) {
+                            setOpen(false)
+                            onError(err instanceof Error ? err.message : "Error al eliminar inscripción")
+                        }
+                    }}>
+                        <input type="hidden" name="registrationId" value={registration.id} />
+                        <SubmitButton label="Eliminar" variant="destructive" />
+                    </form>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 function getColumns(
     updateTeamAction: (formData: FormData) => Promise<void>,
     updateStatusAction: (formData: FormData) => Promise<void>,
+    deleteAction: (formData: FormData) => Promise<void>,
+    onError: (message: string) => void,
 ): ColumnDef<RegistrationRow>[] {
     return [
         {
@@ -154,6 +237,7 @@ function getColumns(
                 <TeamActionCell
                     registration={row.original}
                     action={updateTeamAction}
+                    onError={onError}
                 />
             ),
             filterFn: (row, columnId, filterValue) => {
@@ -168,6 +252,18 @@ function getColumns(
                 <StatusActionCell
                     registration={row.original}
                     action={updateStatusAction}
+                    onError={onError}
+                />
+            ),
+        },
+        {
+            id: "actions",
+            header: "Acciones",
+            cell: ({ row }) => (
+                <DeleteActionCell
+                    registration={row.original}
+                    action={deleteAction}
+                    onError={onError}
                 />
             ),
         },
@@ -178,13 +274,15 @@ export function RegistrationsClient({
     registrations,
     updateTeamAction,
     updateStatusAction,
+    deleteAction,
 }: RegistrationsClientProps) {
     const [globalFilter, setGlobalFilter] = useState("")
     const [teamFilter, setTeamFilter] = useState("all")
+    const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
     const columns = useMemo(
-        () => getColumns(updateTeamAction, updateStatusAction),
-        [updateTeamAction, updateStatusAction],
+        () => getColumns(updateTeamAction, updateStatusAction, deleteAction, setErrorMessage),
+        [updateTeamAction, updateStatusAction, deleteAction],
     )
 
     const columnFilters = useMemo(
@@ -248,7 +346,7 @@ export function RegistrationsClient({
                 <Badge variant="secondary">Publico: {publicCount}</Badge>
             </div>
 
-            <div className="rounded-xl border border-border bg-card p-4">
+            <DashboardCard>
                 <h2 className="mb-3 text-lg font-semibold">Listado general</h2>
 
                 <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -281,7 +379,7 @@ export function RegistrationsClient({
                     columns={columns}
                     emptyMessage="No hay usuarios inscritos en este debate."
                 />
-            </div>
+            </DashboardCard>
 
             <div className="grid gap-4 lg:grid-cols-2">
                 <TeamCard
@@ -289,14 +387,30 @@ export function RegistrationsClient({
                     members={redTeam}
                     counts={counts.red}
                     updateStatusAction={updateStatusAction}
+                    onError={setErrorMessage}
                 />
                 <TeamCard
                     title="Equipo Azul"
                     members={blueTeam}
                     counts={counts.blue}
                     updateStatusAction={updateStatusAction}
+                    onError={setErrorMessage}
                 />
             </div>
+
+            <Dialog open={errorMessage !== null} onOpenChange={(open) => { if (!open) setErrorMessage(null) }}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Error</DialogTitle>
+                        <DialogDescription>{errorMessage}</DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button variant="outline">Cerrar</Button>
+                        </DialogClose>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     )
 }
@@ -306,14 +420,16 @@ function TeamCard({
     members,
     counts,
     updateStatusAction,
+    onError,
 }: {
     title: string
     members: RegistrationRow[]
     counts: { orator: number; reserve: number }
     updateStatusAction: (formData: FormData) => Promise<void>
+    onError: (message: string) => void
 }) {
     return (
-        <div className="rounded-xl border border-border bg-card p-4">
+        <DashboardCard>
             <h3 className="mb-1 text-lg font-semibold">{title}</h3>
             <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
                 <span>Oradores: {counts.orator}/3</span>
@@ -342,12 +458,13 @@ function TeamCard({
                                 <StatusActionCell
                                     registration={registration}
                                     action={updateStatusAction}
+                                    onError={onError}
                                 />
                             </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
             </Table>
-        </div>
+        </DashboardCard>
     )
 }

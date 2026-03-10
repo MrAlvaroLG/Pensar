@@ -10,6 +10,7 @@ import {
     RegistrationsClient,
     type RegistrationRow,
 } from "./registrations-client"
+import { DashboardHeader } from "@/components/admin/dashboard-header"
 
 async function updateRegistrationTeamAction(formData: FormData) {
     "use server"
@@ -117,17 +118,42 @@ async function updateRegistrationStatusAction(formData: FormData) {
     revalidatePath("/debates")
 }
 
+async function deleteRegistrationAction(formData: FormData) {
+    "use server"
+
+    await ensureAdminSession()
+
+    const registrationId = formData.get("registrationId")
+
+    if (typeof registrationId !== "string" || registrationId.length === 0) {
+        throw new Error("Registro inválido")
+    }
+
+    const registration = await prisma.debateRegistration.findUnique({
+        where: { id: registrationId },
+    })
+
+    if (!registration) {
+        throw new Error("Registro no encontrado")
+    }
+
+    await prisma.debateRegistration.delete({
+        where: { id: registrationId },
+    })
+
+    revalidatePath("/dashboard/debate-registrations")
+    revalidatePath("/debates")
+}
+
 export default async function DebateRegistrationsPage() {
     const highlightedDebate = await getHighlightedDebate()
 
     if (!highlightedDebate) {
         return (
-            <section className="space-y-2">
-                <h1 className="text-2xl font-semibold">Usuarios Inscritos</h1>
-                <p className="text-sm text-muted-foreground">
-                    No hay un debate activo o programado para administrar inscripciones.
-                </p>
-            </section>
+            <DashboardHeader
+                title="Usuarios Inscritos"
+                description="No hay un debate activo o programado para administrar inscripciones."
+            />
         )
     }
 
@@ -172,17 +198,16 @@ export default async function DebateRegistrationsPage() {
 
     return (
         <section className="space-y-8">
-            <div className="space-y-2">
-                <h1 className="text-2xl font-semibold">Usuarios Inscritos</h1>
-                <p className="text-sm text-muted-foreground">
-                    Debate actual: {highlightedDebate.subtitle}
-                </p>
-            </div>
+            <DashboardHeader
+                title="Usuarios Inscritos"
+                description={`Debate actual: ${highlightedDebate.subtitle}`}
+            />
 
             <RegistrationsClient
                 registrations={rows}
                 updateTeamAction={updateRegistrationTeamAction}
                 updateStatusAction={updateRegistrationStatusAction}
+                deleteAction={deleteRegistrationAction}
             />
         </section>
     )

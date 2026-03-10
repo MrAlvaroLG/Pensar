@@ -3,50 +3,9 @@ import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { getDebateQueue, toDateTimeLocalValue } from "@/lib/debates"
-import { Button } from "@/components/ui/button"
-
-function parseDateField(value: FormDataEntryValue | null, label: string) {
-    if (typeof value !== "string" || value.length === 0) {
-        throw new Error(`El campo ${label} es obligatorio`)
-    }
-
-    const parsed = new Date(value)
-
-    if (Number.isNaN(parsed.getTime())) {
-        throw new Error(`El campo ${label} no tiene una fecha válida`)
-    }
-
-    return parsed
-}
-
-function parseBibliography(rawValue: FormDataEntryValue | null) {
-    if (typeof rawValue !== "string" || rawValue.trim().length === 0) {
-        return []
-    }
-
-    return rawValue
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean)
-        .map((line, index) => {
-            const [rawLabel, rawUrl] = line.includes("|")
-                ? line.split("|", 2)
-                : [`Referencia ${index + 1}`, line]
-
-            const label = rawLabel.trim()
-            const url = rawUrl.trim()
-
-            try {
-                const validUrl = new URL(url)
-                return {
-                    label,
-                    url: validUrl.toString(),
-                }
-            } catch {
-                throw new Error(`La referencia ${index + 1} no tiene una URL válida`)
-            }
-        })
-}
+import { parseDateField, parseBibliography } from "@/lib/debate-form-helpers"
+import { DashboardHeader } from "@/components/admin/dashboard-header"
+import { DebateForm } from "@/components/admin/debate-form"
 
 async function saveUpcomingDebateAction(formData: FormData) {
     "use server"
@@ -136,107 +95,29 @@ export default async function UpcomingDebatePage() {
 
     return (
         <section className="mx-auto w-full max-w-4xl space-y-6">
-            <div className="space-y-2">
-                <h1 className="text-2xl font-semibold">Debate Próximo</h1>
-                <p className="text-sm text-muted-foreground">
-                    Agenda el siguiente debate para que se publique automáticamente cuando termine el actual.
-                </p>
+            <DashboardHeader
+                title="Debate Próximo"
+                description="Agenda el siguiente debate para que se publique automáticamente cuando termine el actual."
+            >
                 <p className="text-sm text-muted-foreground">
                     Debate actual: {currentDebate ? currentDebate.title : "Sin debate en cola"}
                 </p>
-            </div>
+            </DashboardHeader>
 
-            <form action={saveUpcomingDebateAction} className="space-y-5 rounded-xl border border-border bg-card p-5">
-                <input type="hidden" name="upcomingId" value={upcomingDebate?.id ?? ""} />
-
-                <div className="grid gap-2">
-                    <label htmlFor="title" className="text-sm font-medium">Título</label>
-                    <input
-                        id="title"
-                        name="title"
-                        required
-                        defaultValue={upcomingDebate?.title ?? ""}
-                        className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                    />
-                </div>
-
-                <div className="grid gap-2">
-                    <label htmlFor="subtitle" className="text-sm font-medium">Subtítulo</label>
-                    <input
-                        id="subtitle"
-                        name="subtitle"
-                        required
-                        defaultValue={upcomingDebate?.subtitle ?? ""}
-                        className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                    />
-                </div>
-
-                <div className="grid gap-2">
-                    <label htmlFor="question" className="text-sm font-medium">Pregunta</label>
-                    <input
-                        id="question"
-                        name="question"
-                        required
-                        defaultValue={upcomingDebate?.question ?? ""}
-                        className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                    />
-                </div>
-
-                <div className="grid gap-2">
-                    <label htmlFor="thesis" className="text-sm font-medium">Tesis</label>
-                    <textarea
-                        id="thesis"
-                        name="thesis"
-                        required
-                        rows={4}
-                        defaultValue={upcomingDebate?.thesis ?? ""}
-                        className="min-h-28 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                    <div className="grid gap-2">
-                        <label htmlFor="startAt" className="text-sm font-medium">Inicio</label>
-                        <input
-                            id="startAt"
-                            name="startAt"
-                            type="datetime-local"
-                            required
-                            defaultValue={upcomingDebate ? toDateTimeLocalValue(upcomingDebate.startAt) : ""}
-                            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                        />
-                    </div>
-                    <div className="grid gap-2">
-                        <label htmlFor="endAt" className="text-sm font-medium">Fin</label>
-                        <input
-                            id="endAt"
-                            name="endAt"
-                            type="datetime-local"
-                            required
-                            defaultValue={upcomingDebate ? toDateTimeLocalValue(upcomingDebate.endAt) : ""}
-                            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                        />
-                    </div>
-                </div>
-
-                <div className="grid gap-2">
-                    <label htmlFor="bibliography" className="text-sm font-medium">
-                        Bibliografía (una por línea: Título | URL)
-                    </label>
-                    <textarea
-                        id="bibliography"
-                        name="bibliography"
-                        rows={5}
-                        defaultValue={bibliographyValue}
-                        placeholder="Artículo principal | https://dominio.com/recurso"
-                        className="min-h-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
-                </div>
-
-                <div className="flex justify-end">
-                    <Button type="submit">{upcomingDebate ? "Actualizar próximo debate" : "Crear próximo debate"}</Button>
-                </div>
-            </form>
+            <DebateForm
+                action={saveUpcomingDebateAction}
+                hiddenFields={[{ name: "upcomingId", value: upcomingDebate?.id ?? "" }]}
+                defaultValues={{
+                    title: upcomingDebate?.title,
+                    subtitle: upcomingDebate?.subtitle,
+                    question: upcomingDebate?.question,
+                    thesis: upcomingDebate?.thesis,
+                    startAt: upcomingDebate ? toDateTimeLocalValue(upcomingDebate.startAt) : undefined,
+                    endAt: upcomingDebate ? toDateTimeLocalValue(upcomingDebate.endAt) : undefined,
+                    bibliography: bibliographyValue || undefined,
+                }}
+                submitLabel={upcomingDebate ? "Actualizar próximo debate" : "Crear próximo debate"}
+            />
         </section>
     )
 }

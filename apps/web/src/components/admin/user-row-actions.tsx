@@ -1,7 +1,7 @@
 "use client"
 
-import { useFormStatus } from "react-dom"
 import { Button } from "@/components/ui/button"
+import { SubmitButton } from "@/components/admin/submit-button"
 import {
     Dialog,
     DialogClose,
@@ -17,32 +17,20 @@ interface UserRowActionsProps {
     userId: string
     userName: string
     canPromote: boolean
+    canDemote?: boolean
     onDelete: (formData: FormData) => Promise<void>
     onPromote: (formData: FormData) => Promise<void>
-}
-
-function SubmitButton({
-    label,
-    variant,
-}: {
-    label: string
-    variant: "destructive" | "outline"
-}) {
-    const { pending } = useFormStatus()
-
-    return (
-        <Button type="submit" size="sm" variant={variant} disabled={pending}>
-            {pending ? "Procesando..." : label}
-        </Button>
-    )
+    onDemote?: (formData: FormData) => Promise<void>
 }
 
 export function UserRowActions({
     userId,
     userName,
     canPromote,
+    canDemote = false,
     onDelete,
     onPromote,
+    onDemote,
 }: UserRowActionsProps) {
     return (
         <div className="inline-flex items-center gap-2">
@@ -50,6 +38,13 @@ export function UserRowActions({
                 <form action={onPromote} className="inline-flex">
                     <input type="hidden" name="userId" value={userId} />
                     <SubmitButton label="Hacer admin" variant="outline" />
+                </form>
+            )}
+
+            {canDemote && onDemote && (
+                <form action={onDemote} className="inline-flex">
+                    <input type="hidden" name="userId" value={userId} />
+                    <SubmitButton label="Quitar admin" variant="outline" />
                 </form>
             )}
 

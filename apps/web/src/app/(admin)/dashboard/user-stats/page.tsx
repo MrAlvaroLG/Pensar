@@ -9,6 +9,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
+import { DashboardHeader } from "@/components/admin/dashboard-header"
 import { UserCreationChart } from "./user-creation-chart"
 
 interface UserStatsPageProps {
@@ -102,23 +103,25 @@ export default async function UserStatsPage({ searchParams }: UserStatsPageProps
 
     return (
         <section className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <h1 className="text-xl font-semibold">Usuarios creados por día</h1>
-                <div className="flex items-center gap-2">
-                    <Button asChild variant="outline" size="sm">
-                        <Link href={`/dashboard/user-stats?month=${formatMonthQuery(prevMonth)}`}>
-                            <ChevronLeft className="size-4" />
-                            <span>Mes anterior</span>
-                        </Link>
-                    </Button>
-                    <Button asChild variant="outline" size="sm">
-                        <Link href={`/dashboard/user-stats?month=${formatMonthQuery(nextMonth)}`}>
-                            <span>Mes siguiente</span>
-                            <ChevronRight className="size-4" />
-                        </Link>
-                    </Button>
-                </div>
-            </div>
+            <DashboardHeader
+                title="Usuarios creados por día"
+                actions={
+                    <div className="flex items-center gap-2">
+                        <Button asChild variant="outline" size="sm">
+                            <Link href={`/dashboard/user-stats?month=${formatMonthQuery(prevMonth)}`}>
+                                <ChevronLeft className="size-4" />
+                                <span>Mes anterior</span>
+                            </Link>
+                        </Button>
+                        <Button asChild variant="outline" size="sm">
+                            <Link href={`/dashboard/user-stats?month=${formatMonthQuery(nextMonth)}`}>
+                                <span>Mes siguiente</span>
+                                <ChevronRight className="size-4" />
+                            </Link>
+                        </Button>
+                    </div>
+                }
+            />
 
             <Card>
                 <CardHeader>
