@@ -30,7 +30,7 @@ export function BibliografiaClient({
             <motion.div {...fadeIn(0)}>
                 <Link
                     href="/debates"
-                    className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    className="my-6 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
                     <ArrowLeft className="size-4" />
                     Volver a debates
