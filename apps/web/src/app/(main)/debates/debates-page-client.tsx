@@ -242,19 +242,19 @@ function PastDebateCard({ debate, index }: { debate: PublicPastDebate; index: nu
                     &ldquo;{debate.quote}&rdquo;
                 </p>
 
-                <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
+                <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
                     <Link
                         href={`/debates/${debate.id}/resumen`}
-                        className="flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3.5 py-2 text-sm font-medium text-foreground transition-all hover:-translate-y-0.5 hover:bg-accent hover:shadow-sm"
                     >
-                        <FileText className="size-3.5" />
+                        <FileText className="size-4" />
                         Resumen
                     </Link>
                     <Link
                         href={`/debates/${debate.id}/bibliografia`}
-                        className="flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3.5 py-2 text-sm font-medium text-foreground transition-all hover:-translate-y-0.5 hover:bg-accent hover:shadow-sm"
                     >
-                        <BookOpen className="size-3.5" />
+                        <BookOpen className="size-4" />
                         Bibliografia
                     </Link>
                 </div>
