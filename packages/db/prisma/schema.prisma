@@ -46,6 +46,23 @@ enum SummaryBlockTeam {
   PUBLIC
 }
 
+enum ChatTeam {
+  red
+  blue
+}
+
+enum ChatFileType {
+  IMAGE
+  AUDIO
+  DOCUMENT
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -57,9 +74,13 @@ model User {
   updatedAt     DateTime  @updatedAt
   postura       Postura   @default(OTRO)
   phoneNumber   String?
-  sessions      Session[]
-  accounts      Account[]
-  registrations DebateRegistration[]
+  sessions        Session[]
+  accounts         Account[]
+  registrations    DebateRegistration[]
+  chatMessages     ChatMessage[]
+  chatBans         ChatBan[]     @relation("UserBans")
+  chatBansIssued   ChatBan[]     @relation("BannedBy")
+  chatReports      ChatReport[]
 
   @@index([role])
   @@map("user")
@@ -123,6 +144,8 @@ model Debate {
   registrations    DebateRegistration[]
   summaryBlocks    DebateSummaryBlock[]
   bibliographyDocs DebateBibliographyDoc[]
+  chatMessages     ChatMessage[]
+  chatBans         ChatBan[]
 
   @@index([status, startAt])
   @@index([endAt])
@@ -213,4 +236,59 @@ model LibraryDocument {
 
   @@index([categoryId])
   @@map("library_document")
+}
+
+model ChatMessage {
+  id          String        @id @default(cuid())
+  debateId    String
+  userId      String
+  team        ChatTeam
+  content     String        @default("")
+  fileUrl     String?
+  fileType    ChatFileType?
+  fileName    String?
+  deleted     Boolean       @default(false)
+  deletedAt   DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  debate      Debate        @relation(fields: [debateId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reports     ChatReport[]
+
+  @@index([debateId, team, createdAt])
+  @@index([userId])
+  @@map("chat_message")
+}
+
+model ChatBan {
+  id        String    @id @default(cuid())
+  userId    String
+  debateId  String
+  bannedBy  String
+  reason    String?
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation("UserBans", fields: [userId], references: [id], onDelete: Cascade)
+  debate    Debate    @relation(fields: [debateId], references: [id], onDelete: Cascade)
+  admin     User      @relation("BannedBy", fields: [bannedBy], references: [id])
+
+  @@unique([userId, debateId])
+  @@index([debateId])
+  @@map("chat_ban")
+}
+
+model ChatReport {
+  id         String       @id @default(cuid())
+  messageId  String
+  reportedBy String
+  reason     String?
+  status     ReportStatus @default(PENDING)
+  createdAt  DateTime     @default(now())
+  message    ChatMessage  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  reporter   User         @relation(fields: [reportedBy], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@index([reportedBy])
+  @@index([status])
+  @@map("chat_report")
 }

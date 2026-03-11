@@ -78,3 +78,52 @@ export function getDebateDocPublicUrl(path: string) {
 
     return data.publicUrl
 }
+
+const CHAT_FILES_BUCKET = "chat-files"
+
+export async function uploadChatFile(
+    file: File,
+    debateId: string,
+    team: string,
+    fileId: string,
+): Promise<string> {
+    const supabase = getSupabaseAdmin()
+    const ext = file.name.split(".").pop() ?? "bin"
+    const path = `${debateId}/${team}/${fileId}.${ext}`
+    const { error } = await supabase.storage
+        .from(CHAT_FILES_BUCKET)
+        .upload(path, file, { upsert: false })
+
+    if (error) throw new Error(`Error al subir archivo de chat: ${error.message}`)
+    return path
+}
+
+export async function getChatFileSignedUrl(path: string): Promise<string> {
+    const supabase = getSupabaseAdmin()
+    const { data, error } = await supabase.storage
+        .from(CHAT_FILES_BUCKET)
+        .createSignedUrl(path, 60 * 60 * 24) // 24h
+
+    if (error || !data) throw new Error(`Error al generar URL firmada: ${error?.message}`)
+    return data.signedUrl
+}
+
+export async function deleteChatFolder(debateId: string): Promise<void> {
+    const supabase = getSupabaseAdmin()
+    const { data: files, error: listError } = await supabase.storage
+        .from(CHAT_FILES_BUCKET)
+        .list(debateId, { limit: 1000 })
+
+    if (listError || !files || files.length === 0) return
+
+    const teams = ["red", "blue"]
+    for (const team of teams) {
+        const { data: teamFiles } = await supabase.storage
+            .from(CHAT_FILES_BUCKET)
+            .list(`${debateId}/${team}`, { limit: 1000 })
+        if (teamFiles && teamFiles.length > 0) {
+            const paths = teamFiles.map((f) => `${debateId}/${team}/${f.name}`)
+            await supabase.storage.from(CHAT_FILES_BUCKET).remove(paths)
+        }
+    }
+}

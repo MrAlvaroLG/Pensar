@@ -13,6 +13,7 @@ import UserMenu from "@/components/layout/user-menu";
 const NAV_ITEMS = [
     { href: "/", label: "Inicio" },
     { href: "/debates", label: "Debates" },
+    { href: "/chat", label: "Chat" },
     { href: "/docs", label: "Biblioteca" },
 ] as const;
 
