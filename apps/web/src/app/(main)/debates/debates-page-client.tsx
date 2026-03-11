@@ -11,7 +11,6 @@ import {
     ArrowRight,
     FileText,
     BookOpen,
-    PlayCircle,
 } from "lucide-react"
 import BlurText from "@/components/text/blur"
 import { motion } from "framer-motion"
@@ -244,18 +243,20 @@ function PastDebateCard({ debate, index }: { debate: PublicPastDebate; index: nu
                 </p>
 
                 <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
-                    <button className="flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+                    <Link
+                        href={`/debates/${debate.id}/resumen`}
+                        className="flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    >
                         <FileText className="size-3.5" />
                         Resumen
-                    </button>
-                    <button className="flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+                    </Link>
+                    <Link
+                        href={`/debates/${debate.id}/bibliografia`}
+                        className="flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    >
                         <BookOpen className="size-3.5" />
                         Bibliografia
-                    </button>
-                    <button className="ml-auto flex items-center gap-1.5 rounded bg-red-50 px-2 py-1 text-xs font-bold text-red-700 transition-colors hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30">
-                        <PlayCircle className="size-3.5" />
-                        Grabacion
-                    </button>
+                    </Link>
                 </div>
             </div>
         </motion.div>

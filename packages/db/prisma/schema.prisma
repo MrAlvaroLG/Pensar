@@ -40,6 +40,12 @@ enum RegistrationStatus {
   reserve
 }
 
+enum SummaryBlockTeam {
+  RED
+  BLUE
+  PUBLIC
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -103,18 +109,20 @@ model Verification {
 }
 
 model Debate {
-  id           String              @id @default(cuid())
-  title        String
-  subtitle     String
-  question     String
-  thesis       String
-  startAt      DateTime
-  endAt        DateTime
-  status       DebateStatus        @default(DRAFT)
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
-  bibliography DebateBibliography[]
-  registrations DebateRegistration[]
+  id               String              @id @default(cuid())
+  title            String
+  subtitle         String
+  question         String
+  thesis           String
+  startAt          DateTime
+  endAt            DateTime
+  status           DebateStatus        @default(DRAFT)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  bibliography     DebateBibliography[]
+  registrations    DebateRegistration[]
+  summaryBlocks    DebateSummaryBlock[]
+  bibliographyDocs DebateBibliographyDoc[]
 
   @@index([status, startAt])
   @@index([endAt])
@@ -149,6 +157,35 @@ model DebateBibliography {
 
   @@index([debateId])
   @@map("debate_bibliography")
+}
+
+model DebateSummaryBlock {
+  id        String           @id @default(cuid())
+  debateId  String
+  team      SummaryBlockTeam
+  content   String
+  order     Int              @default(0)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  debate    Debate           @relation(fields: [debateId], references: [id], onDelete: Cascade)
+
+  @@index([debateId])
+  @@map("debate_summary_block")
+}
+
+model DebateBibliographyDoc {
+  id          String   @id @default(cuid())
+  debateId    String
+  title       String
+  description String?
+  fileName    String
+  storagePath String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  debate      Debate   @relation(fields: [debateId], references: [id], onDelete: Cascade)
+
+  @@index([debateId])
+  @@map("debate_bibliography_doc")
 }
 
 model LibraryCategory {

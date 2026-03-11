@@ -61,3 +61,20 @@ export function getTeamLabel(team: DebateTeam): string {
 export function getStatusLabel(status: DebateRegistrationStatus): string {
     return STATUS_OPTIONS.find((option) => option.value === status)?.label ?? status
 }
+
+export const SUMMARY_BLOCK_TEAMS = ["RED", "BLUE", "PUBLIC"] as const
+export type SummaryBlockTeam = (typeof SUMMARY_BLOCK_TEAMS)[number]
+
+export const SUMMARY_BLOCK_TEAM_OPTIONS: Array<{ value: SummaryBlockTeam; label: string }> = [
+    { value: "RED", label: "Equipo Rojo" },
+    { value: "BLUE", label: "Equipo Azul" },
+    { value: "PUBLIC", label: "Preguntas del Publico" },
+]
+
+export function isSummaryBlockTeam(value: unknown): value is SummaryBlockTeam {
+    return typeof value === "string" && SUMMARY_BLOCK_TEAMS.includes(value as SummaryBlockTeam)
+}
+
+export function getSummaryBlockTeamLabel(team: SummaryBlockTeam): string {
+    return SUMMARY_BLOCK_TEAM_OPTIONS.find((o) => o.value === team)?.label ?? team
+}

@@ -1,7 +1,8 @@
 import "server-only"
 import { createClient } from "@supabase/supabase-js"
 
-const BUCKET = "library-pdfs"
+const LIBRARY_BUCKET = "library-pdfs"
+const DEBATE_DOCS_BUCKET = "debate-docs"
 
 function getSupabaseAdmin() {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -19,7 +20,7 @@ function getSupabaseAdmin() {
 export async function uploadPdf(file: File, path: string) {
     const supabase = getSupabaseAdmin()
     const { data, error } = await supabase.storage
-        .from(BUCKET)
+        .from(LIBRARY_BUCKET)
         .upload(path, file, {
             contentType: "application/pdf",
             upsert: false,
@@ -32,7 +33,7 @@ export async function uploadPdf(file: File, path: string) {
 export async function deletePdf(path: string) {
     const supabase = getSupabaseAdmin()
     const { error } = await supabase.storage
-        .from(BUCKET)
+        .from(LIBRARY_BUCKET)
         .remove([path])
 
     if (error) throw new Error(`Error al eliminar PDF: ${error.message}`)
@@ -41,7 +42,38 @@ export async function deletePdf(path: string) {
 export function getPublicUrl(path: string) {
     const supabase = getSupabaseAdmin()
     const { data } = supabase.storage
-        .from(BUCKET)
+        .from(LIBRARY_BUCKET)
+        .getPublicUrl(path)
+
+    return data.publicUrl
+}
+
+export async function uploadDebateDoc(file: File, path: string) {
+    const supabase = getSupabaseAdmin()
+    const { data, error } = await supabase.storage
+        .from(DEBATE_DOCS_BUCKET)
+        .upload(path, file, {
+            contentType: "application/pdf",
+            upsert: false,
+        })
+
+    if (error) throw new Error(`Error al subir documento: ${error.message}`)
+    return data.path
+}
+
+export async function deleteDebateDoc(path: string) {
+    const supabase = getSupabaseAdmin()
+    const { error } = await supabase.storage
+        .from(DEBATE_DOCS_BUCKET)
+        .remove([path])
+
+    if (error) throw new Error(`Error al eliminar documento: ${error.message}`)
+}
+
+export function getDebateDocPublicUrl(path: string) {
+    const supabase = getSupabaseAdmin()
+    const { data } = supabase.storage
+        .from(DEBATE_DOCS_BUCKET)
         .getPublicUrl(path)
 
     return data.publicUrl

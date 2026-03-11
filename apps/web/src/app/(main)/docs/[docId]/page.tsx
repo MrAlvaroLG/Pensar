@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import prisma from "@pensar/db"
 import { getPublicUrl } from "@/lib/supabase-storage"
-import { PdfViewer } from "@/components/docs/pdf-viewer"
+import { PdfViewer } from "@/components/docs/pdf-viewer-client"
 
 interface DocPageProps {
     params: Promise<{ docId: string }>

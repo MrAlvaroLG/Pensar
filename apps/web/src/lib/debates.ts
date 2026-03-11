@@ -1,6 +1,6 @@
 import prisma, { DebateStatus } from "@pensar/db"
 import { unstable_noStore as noStore } from "next/cache"
-import { isDebateTeam, type DebateRegistrationStatus, type DebateTeam } from "@/lib/debate-domain"
+import { isDebateTeam, type DebateRegistrationStatus, type DebateTeam, type SummaryBlockTeam } from "@/lib/debate-domain"
 
 export interface PublicDebate {
     id: string
@@ -14,8 +14,29 @@ export interface PublicDebate {
 export interface PublicPastDebate {
     id: string
     title: string
+    subtitle: string
+    question: string
     quote: string
     dateLabel: string
+}
+
+export interface PublicSummaryBlock {
+    id: string
+    team: SummaryBlockTeam
+    content: string
+}
+
+export interface PublicBibliographyLink {
+    id: string
+    label: string
+    url: string
+}
+
+export interface PublicBibliographyDoc {
+    id: string
+    title: string
+    description: string | null
+    url: string
 }
 
 export interface ViewerDebateRegistration {
@@ -168,6 +189,8 @@ export async function getPublicDebatesData() {
         pastDebates: pastDebates.map((debate) => ({
             id: debate.id,
             title: debate.title,
+            subtitle: debate.subtitle,
+            question: debate.question,
             quote: debate.thesis,
             dateLabel: DATE_FORMATTER.format(debate.endAt),
         } satisfies PublicPastDebate)),
@@ -282,3 +305,77 @@ export const DEBATE_STATUS_OPTIONS: Array<{ value: DebateStatus; label: string }
     { value: "LIVE", label: "En vivo" },
     { value: "FINISHED", label: "Finalizado" },
 ]
+
+export async function getFinishedDebates() {
+    noStore()
+
+    return prisma.debate.findMany({
+        where: {
+            status: "FINISHED",
+        },
+        include: {
+            _count: {
+                select: {
+                    summaryBlocks: true,
+                    bibliographyDocs: true,
+                    bibliography: true,
+                },
+            },
+        },
+        orderBy: {
+            endAt: "desc",
+        },
+    })
+}
+
+export async function getFinishedDebateById(id: string) {
+    noStore()
+
+    return prisma.debate.findFirst({
+        where: {
+            id,
+            status: "FINISHED",
+        },
+        include: {
+            summaryBlocks: {
+                orderBy: {
+                    order: "asc",
+                },
+            },
+            bibliography: {
+                orderBy: {
+                    createdAt: "asc",
+                },
+            },
+            bibliographyDocs: {
+                orderBy: {
+                    createdAt: "asc",
+                },
+            },
+        },
+    })
+}
+
+export async function getAllPastDebatesForArchive() {
+    noStore()
+
+    await syncDebateScheduleIfNeeded()
+
+    const debates = await prisma.debate.findMany({
+        where: {
+            status: "FINISHED",
+        },
+        orderBy: {
+            endAt: "desc",
+        },
+    })
+
+    return debates.map((debate) => ({
+        id: debate.id,
+        title: debate.title,
+        subtitle: debate.subtitle,
+        question: debate.question,
+        quote: debate.thesis,
+        dateLabel: DATE_FORMATTER.format(debate.endAt),
+    } satisfies PublicPastDebate))
+}
