@@ -59,8 +59,10 @@ export default function HeroSection() {
             </div>
 
             <motion.div {...fadeInTransition}>
-                <Button className="w-full max-w-xs md:w-auto md:max-w-none">
-                    Explorar debates
+                <Button asChild className="w-full max-w-xs md:w-auto md:max-w-none">
+                    <a href="/debates">
+                        Explorar debates
+                    </a>
                 </Button>
             </motion.div>
         </div>

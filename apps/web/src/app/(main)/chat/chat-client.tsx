@@ -81,6 +81,43 @@ function formatTime(iso: string) {
     })
 }
 
+async function compressImage(file: File): Promise<File> {
+    const MAX_SIDE = 1280
+    const QUALITY = 0.82
+    return new Promise((resolve) => {
+        const img = new Image()
+        const objectUrl = URL.createObjectURL(file)
+        img.onload = () => {
+            URL.revokeObjectURL(objectUrl)
+            let { naturalWidth: w, naturalHeight: h } = img
+            if (w <= MAX_SIDE && h <= MAX_SIDE) {
+                resolve(file)
+                return
+            }
+            const ratio = Math.min(MAX_SIDE / w, MAX_SIDE / h)
+            w = Math.round(w * ratio)
+            h = Math.round(h * ratio)
+            const canvas = document.createElement("canvas")
+            canvas.width = w
+            canvas.height = h
+            const ctx = canvas.getContext("2d")
+            if (!ctx) { resolve(file); return }
+            ctx.drawImage(img, 0, 0, w, h)
+            canvas.toBlob(
+                (blob) => {
+                    if (!blob) { resolve(file); return }
+                    const baseName = file.name.replace(/\.[^.]+$/, "")
+                    resolve(new File([blob], `${baseName}.jpg`, { type: "image/jpeg" }))
+                },
+                "image/jpeg",
+                QUALITY
+            )
+        }
+        img.onerror = () => { URL.revokeObjectURL(objectUrl); resolve(file) }
+        img.src = objectUrl
+    })
+}
+
 function FilePreview({
     file,
     onRemove,
@@ -126,12 +163,14 @@ function MessageBubble({
     team,
     showHeader,
     onLongPress,
+    onImageClick,
 }: {
     message: LocalMessage
     isOwn: boolean
     team: "red" | "blue"
     showHeader: boolean
     onLongPress: (msg: LocalMessage) => void
+    onImageClick: (url: string) => void
 }) {
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -194,14 +233,18 @@ function MessageBubble({
                     )}
                 >
                     {isImage && message.fileUrl && (
-                        <a href={message.fileUrl} target="_blank" rel="noopener noreferrer">
+                        <button
+                            type="button"
+                            className="block cursor-zoom-in"
+                            onClick={() => onImageClick(message.fileUrl!)}
+                        >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                                 src={message.fileUrl}
                                 alt={message.fileName ?? "imagen"}
-                                className="mb-1 max-h-48 rounded-lg object-cover"
+                                className="mb-1 max-h-48 w-full rounded-lg object-cover"
                             />
-                        </a>
+                        </button>
                     )}
                     {isAudio && message.fileUrl && (
                         // eslint-disable-next-line jsx-a11y/media-has-caption
@@ -266,6 +309,7 @@ export function ChatClient({
     const [error, setError] = useState<string | null>(null)
     const [isRecording, setIsRecording] = useState(false)
     const [recordingSeconds, setRecordingSeconds] = useState(0)
+    const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
 
     const bottomRef = useRef<HTMLDivElement>(null)
     const listRef = useRef<HTMLDivElement>(null)
@@ -494,6 +538,15 @@ export function ChatClient({
         setContextMsg(null)
     }, [contextMsg, reportReason])
 
+    const handleFile = useCallback(async (file: File) => {
+        if (file.type.startsWith("image/")) {
+            const compressed = await compressImage(file)
+            setPendingFile(compressed)
+        } else {
+            setPendingFile(file)
+        }
+    }, [])
+
     const formatRecordingTime = useCallback((s: number) => {
         const m = Math.floor(s / 60).toString().padStart(2, "0")
         const sec = (s % 60).toString().padStart(2, "0")
@@ -504,7 +557,17 @@ export function ChatClient({
         if (isRecording) return
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-            const mr = new MediaRecorder(stream)
+            // Safari only supports audio/mp4; Chrome/Firefox prefer audio/webm
+            const preferredTypes = [
+                "audio/webm;codecs=opus",
+                "audio/webm",
+                "audio/ogg;codecs=opus",
+                "audio/mp4",
+            ]
+            const supportedMime = preferredTypes.find(
+                (t) => MediaRecorder.isTypeSupported(t)
+            ) ?? ""
+            const mr = new MediaRecorder(stream, supportedMime ? { mimeType: supportedMime } : undefined)
             audioChunksRef.current = []
             mr.ondataavailable = (e) => {
                 if (e.data.size > 0) audioChunksRef.current.push(e.data)
@@ -535,7 +598,9 @@ export function ChatClient({
             mr.stream.getTracks().forEach((t) => t.stop())
             if (send && audioChunksRef.current.length > 0) {
                 const mimeType = mr.mimeType || "audio/webm"
-                const ext = mimeType.includes("ogg") ? "ogg" : "webm"
+                let ext = "webm"
+                if (mimeType.includes("ogg")) ext = "ogg"
+                else if (mimeType.includes("mp4")) ext = "mp4"
                 const blob = new Blob(audioChunksRef.current, { type: mimeType })
                 const file = new File([blob], `audio-${Date.now()}.${ext}`, { type: mimeType })
                 setPendingFile(file)
@@ -607,6 +672,7 @@ export function ChatClient({
                                 team={team}
                                 showHeader={showHeader}
                                 onLongPress={setContextMsg}
+                                onImageClick={setLightboxUrl}
                             />
                         )
                     })}
@@ -674,7 +740,7 @@ export function ChatClient({
                         </div>
                     ) : (
                         <div className="flex items-end gap-2">
-                            <ChatFileUpload onFile={setPendingFile} disabled={sending} />
+                            <ChatFileUpload onFile={handleFile} disabled={sending} />
                             <textarea
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
@@ -762,6 +828,20 @@ export function ChatClient({
                             Cancelar
                         </Button>
                     </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Image lightbox */}
+            <Dialog open={!!lightboxUrl} onOpenChange={(open) => !open && setLightboxUrl(null)}>
+                <DialogContent className="flex max-w-3xl items-center justify-center bg-black/90 p-2">
+                    {lightboxUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                            src={lightboxUrl}
+                            alt="imagen"
+                            className="max-h-[85vh] max-w-full rounded-lg object-contain"
+                        />
+                    )}
                 </DialogContent>
             </Dialog>
 

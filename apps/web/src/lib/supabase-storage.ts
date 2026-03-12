@@ -92,7 +92,7 @@ export async function uploadChatFile(
     const path = `${debateId}/${team}/${fileId}.${ext}`
     const { error } = await supabase.storage
         .from(CHAT_FILES_BUCKET)
-        .upload(path, file, { upsert: false })
+        .upload(path, file, { upsert: false, contentType: file.type })
 
     if (error) throw new Error(`Error al subir archivo de chat: ${error.message}`)
     return path

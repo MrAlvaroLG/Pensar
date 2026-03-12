@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useCallback } from "react"
-import { ImageIcon, Mic, FileText, Paperclip } from "lucide-react"
+import { ImageIcon, Paperclip } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface ChatFileUploadProps {
@@ -11,7 +11,6 @@ interface ChatFileUploadProps {
 
 export function ChatFileUpload({ onFile, disabled }: ChatFileUploadProps) {
     const imageRef = useRef<HTMLInputElement>(null)
-    const audioRef = useRef<HTMLInputElement>(null)
     const docRef = useRef<HTMLInputElement>(null)
 
     const handleChange = useCallback(
@@ -35,16 +34,9 @@ export function ChatFileUpload({ onFile, disabled }: ChatFileUploadProps) {
                 onChange={handleChange}
             />
             <input
-                ref={audioRef}
-                type="file"
-                accept="audio/*"
-                className="hidden"
-                onChange={handleChange}
-            />
-            <input
                 ref={docRef}
                 type="file"
-                accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx"
+                accept="*/*"
                 className="hidden"
                 onChange={handleChange}
             />
@@ -59,28 +51,6 @@ export function ChatFileUpload({ onFile, disabled }: ChatFileUploadProps) {
                 title="Adjuntar imagen"
             >
                 <ImageIcon className="size-4" />
-            </Button>
-            <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="size-8 text-muted-foreground hover:text-foreground"
-                disabled={disabled}
-                onClick={() => audioRef.current?.click()}
-                title="Adjuntar audio"
-            >
-                <Mic className="size-4" />
-            </Button>
-            <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="size-8 text-muted-foreground hover:text-foreground"
-                disabled={disabled}
-                onClick={() => docRef.current?.click()}
-                title="Adjuntar documento"
-            >
-                <FileText className="size-4" />
             </Button>
             <Button
                 type="button"
