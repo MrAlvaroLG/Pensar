@@ -289,9 +289,9 @@ export default function ChatSection() {
                         viewport={{ once: true, amount: 0.25 }}
                         transition={{ duration: 0.75, ease: "easeOut" }}
                     >
-                        <Card className="relative h-full overflow-hidden border-border/70 bg-background/80 shadow-xl shadow-black/5 backdrop-blur-sm">
+                        <Card className="relative min-h-160 overflow-hidden border-border/70 bg-background/80 shadow-xl shadow-black/5 backdrop-blur-sm lg:h-full lg:min-h-0">
                             <div className="absolute inset-0 bg-linear-to-br from-blue-500/12 via-transparent to-red-500/12" />
-                            <CardContent className="relative flex h-full flex-col gap-6 p-6 md:p-8">
+                            <CardContent className="relative flex h-full flex-col gap-5 p-4 sm:gap-6 sm:p-6 md:p-8">
                                 <div className="flex items-center justify-between gap-4">
                                     <div>
                                         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
@@ -326,7 +326,7 @@ export default function ChatSection() {
                                     </AnimatePresence>
                                 </div>
 
-                                <div className="flex flex-1 flex-col overflow-hidden rounded-[1.75rem] border border-border/70 bg-background/90 p-4 shadow-inner shadow-black/5 backdrop-blur-sm">
+                                <div className="flex flex-1 flex-col overflow-hidden rounded-[1.75rem] border border-border/70 bg-background/90 p-3 shadow-inner shadow-black/5 backdrop-blur-sm sm:p-4">
                                     <div className="flex items-center justify-between gap-3 border-b border-border/70 pb-4">
                                         <div className="space-y-1">
                                             <p className="text-sm font-medium text-foreground">Canal del equipo</p>
@@ -338,8 +338,8 @@ export default function ChatSection() {
                                         </div>
                                     </div>
 
-                                    <div className="mt-5 flex flex-1 flex-col overflow-hidden rounded-[1.35rem] border border-border/70 bg-muted/25 p-3">
-                                        <div className="min-h-0 flex-1 space-y-3 overflow-hidden">
+                                    <div className="mt-4 flex flex-1 flex-col overflow-hidden rounded-[1.35rem] border border-border/70 bg-muted/25 p-2.5 sm:mt-5 sm:p-3">
+                                        <div className="min-h-88 flex-1 space-y-3 overflow-hidden sm:min-h-96 lg:min-h-0">
                                             <AnimatePresence mode="popLayout">
                                                 {visibleMessages.map((message) => (
                                                     <motion.div
@@ -419,13 +419,12 @@ export default function ChatSection() {
                                             ) : null}
                                         </div>
 
-                                        <div className="mt-4 rounded-[1.15rem] border border-border/70 bg-background/85 p-3 backdrop-blur-sm">
-                                            <div className="flex items-center gap-2">
+                                        <div className="mt-3 rounded-[1.15rem] border border-border/70 bg-background/85 p-2.5 backdrop-blur-sm sm:mt-4 sm:p-3">
+                                            <div className="flex items-center gap-1.5 sm:gap-2">
                                                 <button type="button" className="rounded-full border border-border/70 p-2 text-muted-foreground">
                                                     <Paperclip className="size-4" />
                                                 </button>
-                                                <div className="flex-1 rounded-full border border-border/70 bg-muted/40 px-4 py-2.5 text-sm text-muted-foreground">
-                                                </div>
+                                                <div className="flex-1 rounded-full border border-border/70 bg-muted/40 px-3 py-2 text-sm text-muted-foreground sm:px-4 sm:py-2.5">                                                </div>
                                                 <button type="button" className="rounded-full border border-border/70 p-2 text-muted-foreground">
                                                     <Mic className="size-4" />
                                                 </button>
