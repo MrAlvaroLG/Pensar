@@ -313,6 +313,7 @@ export function ChatClient({
 
     const bottomRef = useRef<HTMLDivElement>(null)
     const listRef = useRef<HTMLDivElement>(null)
+    const textareaRef = useRef<HTMLTextAreaElement>(null)
     const localIdCounter = useRef(0)
     const processedIds = useRef(new Set<string>())
     const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -466,6 +467,9 @@ export function ChatClient({
 
         setMessages((prev) => [...prev, optimistic])
         setInput("")
+        if (textareaRef.current) {
+            textareaRef.current.style.height = "auto"
+        }
         const fileToSend = pendingFile
         setPendingFile(null)
         setSending(true)
@@ -742,14 +746,15 @@ export function ChatClient({
                         <div className="flex items-end gap-2">
                             <ChatFileUpload onFile={handleFile} disabled={sending} />
                             <textarea
+                                ref={textareaRef}
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 placeholder=""
                                 rows={1}
                                 disabled={sending}
-                                className="flex-1 resize-none rounded-xl border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-                                style={{ maxHeight: "8rem", overflowY: "auto" }}
+                                className="flex-1 resize-none rounded-xl border bg-background px-3 py-2 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                                style={{ maxHeight: "8rem", overflowY: "auto", fontSize: "16px" }}
                                 onInput={(e) => {
                                     const el = e.currentTarget
                                     el.style.height = "auto"

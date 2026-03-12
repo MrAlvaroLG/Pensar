@@ -36,7 +36,7 @@ export function ChatFileUpload({ onFile, disabled }: ChatFileUploadProps) {
             <input
                 ref={docRef}
                 type="file"
-                accept="*/*"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z,application/*,text/plain,text/csv"
                 className="hidden"
                 onChange={handleChange}
             />
