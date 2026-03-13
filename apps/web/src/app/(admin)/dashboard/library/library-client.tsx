@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { Trash2, Upload, Plus, Pencil, X, Check, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -52,7 +53,6 @@ interface LibraryClientProps {
     createCategoryAction: (formData: FormData) => Promise<void>
     updateCategoryAction: (formData: FormData) => Promise<void>
     deleteCategoryAction: (formData: FormData) => Promise<void>
-    uploadDocumentAction: (formData: FormData) => Promise<void>
     deleteDocumentAction: (formData: FormData) => Promise<void>
 }
 
@@ -202,21 +202,72 @@ function CategorySection({
 function UploadSection({
     categories,
     documents,
-    uploadDocumentAction,
     deleteDocumentAction,
-}: Pick<LibraryClientProps, "categories" | "documents" | "uploadDocumentAction" | "deleteDocumentAction">) {
+}: Pick<LibraryClientProps, "categories" | "documents" | "deleteDocumentAction">) {
+    const router = useRouter()
     const [pending, startTransition] = useTransition()
+    const [uploading, setUploading] = useState(false)
+    const [uploadProgress, setUploadProgress] = useState(0)
+    const [uploadError, setUploadError] = useState<string | null>(null)
     const uploadFormRef = useRef<HTMLFormElement>(null)
     const [selectedFile, setSelectedFile] = useState<string | null>(null)
     const [dialogOpen, setDialogOpen] = useState(false)
 
-    const handleUpload = (formData: FormData) => {
-        startTransition(async () => {
-            await uploadDocumentAction(formData)
-            uploadFormRef.current?.reset()
-            setSelectedFile(null)
-            setDialogOpen(false)
+    const handleUpload = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+        const form = uploadFormRef.current
+        if (!form || uploading) return
+
+        setUploadError(null)
+        setUploading(true)
+        setUploadProgress(0)
+
+        const formData = new FormData(form)
+
+        await new Promise<void>((resolve) => {
+            const xhr = new XMLHttpRequest()
+
+            xhr.upload.addEventListener("progress", (progressEvent) => {
+                if (!progressEvent.lengthComputable) return
+                const nextProgress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
+                setUploadProgress(nextProgress)
+            })
+
+            xhr.addEventListener("load", () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    setUploadProgress(100)
+                    form.reset()
+                    setSelectedFile(null)
+                    setDialogOpen(false)
+                    router.refresh()
+                    resolve()
+                    return
+                }
+
+                try {
+                    const response = JSON.parse(xhr.responseText) as { error?: string }
+                    setUploadError(response.error ?? "No se pudo subir el archivo")
+                } catch {
+                    setUploadError("No se pudo subir el archivo")
+                }
+                resolve()
+            })
+
+            xhr.addEventListener("error", () => {
+                setUploadError("Error de red durante la subida")
+                resolve()
+            })
+
+            xhr.addEventListener("abort", () => {
+                setUploadError("La subida fue cancelada")
+                resolve()
+            })
+
+            xhr.open("POST", "/api/admin/library/upload")
+            xhr.send(formData)
         })
+
+        setUploading(false)
     }
 
     const handleDelete = (docId: string) => {
@@ -243,18 +294,18 @@ function UploadSection({
                         <DialogHeader>
                             <DialogTitle>Subir documento PDF</DialogTitle>
                         </DialogHeader>
-                        <form ref={uploadFormRef} action={handleUpload} className="space-y-4">
+                        <form ref={uploadFormRef} onSubmit={handleUpload} className="space-y-4">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Título</label>
-                                <Input name="title" placeholder="Título del documento" required disabled={pending} />
+                                <Input name="title" placeholder="Título del documento" required disabled={pending || uploading} />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Descripción (opcional)</label>
-                                <Textarea name="description" placeholder="Breve descripción del documento..." disabled={pending} />
+                                <Textarea name="description" placeholder="Breve descripción del documento..." disabled={pending || uploading} />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Categoría</label>
-                                <Select name="categoryId" required>
+                                <Select name="categoryId" required disabled={pending || uploading}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Seleccionar categoría" />
                                     </SelectTrigger>
@@ -274,7 +325,7 @@ function UploadSection({
                                     name="file"
                                     accept="application/pdf"
                                     required
-                                    disabled={pending}
+                                    disabled={pending || uploading}
                                     onChange={(e) => setSelectedFile(e.target.files?.[0]?.name ?? null)}
                                 />
                                 {selectedFile && (
@@ -283,8 +334,25 @@ function UploadSection({
                                     </p>
                                 )}
                             </div>
-                            <Button type="submit" disabled={pending} className="w-full">
-                                {pending ? "Subiendo..." : "Subir documento"}
+
+                            {uploading && (
+                                <div className="space-y-1.5">
+                                    <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                                        <div
+                                            className="h-full rounded-full bg-primary transition-[width] duration-150"
+                                            style={{ width: `${uploadProgress}%` }}
+                                        />
+                                    </div>
+                                    <p className="text-muted-foreground text-xs">Subiendo: {uploadProgress}%</p>
+                                </div>
+                            )}
+
+                            {uploadError && (
+                                <p className="text-destructive text-sm">{uploadError}</p>
+                            )}
+
+                            <Button type="submit" disabled={pending || uploading} className="w-full">
+                                {uploading ? `Subiendo... ${uploadProgress}%` : "Subir documento"}
                             </Button>
                         </form>
                     </DialogContent>
@@ -353,7 +421,6 @@ export function LibraryClient({
     createCategoryAction,
     updateCategoryAction,
     deleteCategoryAction,
-    uploadDocumentAction,
     deleteDocumentAction,
 }: LibraryClientProps) {
     return (
@@ -367,7 +434,6 @@ export function LibraryClient({
             <UploadSection
                 categories={categories}
                 documents={documents}
-                uploadDocumentAction={uploadDocumentAction}
                 deleteDocumentAction={deleteDocumentAction}
             />
         </div>

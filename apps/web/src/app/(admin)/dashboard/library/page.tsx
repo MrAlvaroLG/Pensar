@@ -1,10 +1,8 @@
 import prisma from "@pensar/db"
 import { revalidatePath } from "next/cache"
 import { ensureAdminSession } from "@/lib/admin-auth"
-import { uploadPdf, deletePdf } from "@/lib/supabase-storage"
+import { deletePdf } from "@/lib/supabase-storage"
 import { LibraryClient } from "./library-client"
-
-const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20 MB
 
 async function createCategoryAction(formData: FormData) {
     "use server"
@@ -88,59 +86,6 @@ async function deleteCategoryAction(formData: FormData) {
     revalidatePath("/dashboard/library")
 }
 
-async function uploadDocumentAction(formData: FormData) {
-    "use server"
-    await ensureAdminSession()
-
-    const title = formData.get("title")
-    const description = formData.get("description")
-    const categoryId = formData.get("categoryId")
-    const file = formData.get("file")
-
-    if (typeof title !== "string" || title.trim().length === 0) {
-        throw new Error("El título es obligatorio")
-    }
-    if (typeof categoryId !== "string" || categoryId.length === 0) {
-        throw new Error("Selecciona una categoría")
-    }
-    if (!(file instanceof File) || file.size === 0) {
-        throw new Error("Selecciona un archivo PDF")
-    }
-    if (file.type !== "application/pdf") {
-        throw new Error("Solo se permiten archivos PDF")
-    }
-    if (file.size > MAX_FILE_SIZE) {
-        throw new Error("El archivo no puede superar los 20 MB")
-    }
-
-    const category = await prisma.libraryCategory.findUnique({
-        where: { id: categoryId },
-    })
-    if (!category) {
-        throw new Error("La categoría no existe")
-    }
-
-    const timestamp = Date.now()
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_")
-    const storagePath = `${categoryId}/${timestamp}-${safeName}`
-
-    await uploadPdf(file, storagePath)
-
-    await prisma.libraryDocument.create({
-        data: {
-            title: title.trim(),
-            description: typeof description === "string" && description.trim().length > 0
-                ? description.trim()
-                : null,
-            fileName: file.name,
-            storagePath,
-            categoryId,
-        },
-    })
-
-    revalidatePath("/dashboard/library")
-}
-
 async function deleteDocumentAction(formData: FormData) {
     "use server"
     await ensureAdminSession()
@@ -202,7 +147,6 @@ export default async function LibraryPage() {
             createCategoryAction={createCategoryAction}
             updateCategoryAction={updateCategoryAction}
             deleteCategoryAction={deleteCategoryAction}
-            uploadDocumentAction={uploadDocumentAction}
             deleteDocumentAction={deleteDocumentAction}
         />
     )
