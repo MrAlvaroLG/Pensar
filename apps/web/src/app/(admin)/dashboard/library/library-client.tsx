@@ -223,49 +223,78 @@ function UploadSection({
         setUploadProgress(0)
 
         const formData = new FormData(form)
+        const file = formData.get("file")
+        const title = formData.get("title")
+        const description = formData.get("description")
+        const categoryId = formData.get("categoryId")
 
-        await new Promise<void>((resolve) => {
-            const xhr = new XMLHttpRequest()
+        if (!(file instanceof File) || file.size === 0) {
+            setUploadError("Selecciona un archivo PDF")
+            setUploading(false)
+            return
+        }
 
-            xhr.upload.addEventListener("progress", (progressEvent) => {
-                if (!progressEvent.lengthComputable) return
-                const nextProgress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
-                setUploadProgress(nextProgress)
+        try {
+            // Step 1: Request a signed upload URL from the server
+            const presignRes = await fetch("/api/admin/library/presign", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ categoryId, fileName: file.name }),
+            })
+            if (!presignRes.ok) {
+                let msg = "No se pudo iniciar la subida"
+                try { msg = ((await presignRes.json()) as { error?: string }).error ?? msg } catch { /* ignore */ }
+                setUploadError(msg)
+                setUploading(false)
+                return
+            }
+            const { signedUrl, storagePath } = await presignRes.json() as { signedUrl: string; storagePath: string }
+
+            // Step 2: Upload the file directly to Supabase Storage (with progress)
+            await new Promise<void>((resolve, reject) => {
+                const xhr = new XMLHttpRequest()
+
+                xhr.upload.addEventListener("progress", (e) => {
+                    if (!e.lengthComputable) return
+                    setUploadProgress(Math.round((e.loaded / e.total) * 95))
+                })
+
+                xhr.addEventListener("load", () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        setUploadProgress(95)
+                        resolve()
+                        return
+                    }
+                    reject(new Error("Error al subir el archivo"))
+                })
+                xhr.addEventListener("error", () => reject(new Error("Error de red durante la subida")))
+                xhr.addEventListener("abort", () => reject(new Error("La subida fue cancelada")))
+
+                xhr.open("PUT", signedUrl)
+                xhr.setRequestHeader("Content-Type", "application/pdf")
+                xhr.send(file)
             })
 
-            xhr.addEventListener("load", () => {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    setUploadProgress(100)
-                    form.reset()
-                    setSelectedFile(null)
-                    setDialogOpen(false)
-                    router.refresh()
-                    resolve()
-                    return
-                }
-
-                try {
-                    const response = JSON.parse(xhr.responseText) as { error?: string }
-                    setUploadError(response.error ?? "No se pudo subir el archivo")
-                } catch {
-                    setUploadError("No se pudo subir el archivo")
-                }
-                resolve()
+            // Step 3: Register document metadata in the database
+            const registerRes = await fetch("/api/admin/library/upload", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, description, categoryId, fileName: file.name, storagePath }),
             })
-
-            xhr.addEventListener("error", () => {
-                setUploadError("Error de red durante la subida")
-                resolve()
-            })
-
-            xhr.addEventListener("abort", () => {
-                setUploadError("La subida fue cancelada")
-                resolve()
-            })
-
-            xhr.open("POST", "/api/admin/library/upload")
-            xhr.send(formData)
-        })
+            if (!registerRes.ok) {
+                let msg = "No se pudo registrar el documento"
+                try { msg = ((await registerRes.json()) as { error?: string }).error ?? msg } catch { /* ignore */ }
+                setUploadError(msg)
+            } else {
+                setUploadProgress(100)
+                form.reset()
+                setSelectedFile(null)
+                setDialogOpen(false)
+                router.refresh()
+            }
+        } catch (err) {
+            setUploadError(err instanceof Error ? err.message : "No se pudo subir el archivo")
+        }
 
         setUploading(false)
     }

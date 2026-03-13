@@ -2,50 +2,49 @@ import { NextResponse } from "next/server"
 import prisma from "@pensar/db"
 import { revalidatePath } from "next/cache"
 import { ensureAdminSession } from "@/lib/admin-auth"
-import { uploadPdf } from "@/lib/supabase-storage"
 
-const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20 MB
-
+/**
+ * Registers a document in the database after the file has been uploaded
+ * directly to Supabase Storage by the client via a signed URL (see /api/admin/library/presign).
+ * Accepts JSON body: { title, description?, categoryId, fileName, storagePath }
+ */
 export async function POST(request: Request) {
     try {
         await ensureAdminSession()
 
-        const formData = await request.formData()
-        const title = formData.get("title")
-        const description = formData.get("description")
-        const categoryId = formData.get("categoryId")
-        const file = formData.get("file")
+        const body = await request.json() as {
+            title?: string
+            description?: string
+            categoryId?: string
+            fileName?: string
+            storagePath?: string
+        }
+        const { title, description, categoryId, fileName, storagePath } = body
 
         if (typeof title !== "string" || title.trim().length === 0) {
             return NextResponse.json({ error: "El título es obligatorio" }, { status: 400 })
         }
-        if (typeof categoryId !== "string" || categoryId.length === 0) {
+        if (typeof categoryId !== "string" || !categoryId) {
             return NextResponse.json({ error: "Selecciona una categoría" }, { status: 400 })
         }
-        if (!(file instanceof File) || file.size === 0) {
-            return NextResponse.json({ error: "Selecciona un archivo PDF" }, { status: 400 })
+        if (typeof fileName !== "string" || !fileName) {
+            return NextResponse.json({ error: "fileName requerido" }, { status: 400 })
         }
-        if (file.type !== "application/pdf") {
-            return NextResponse.json({ error: "Solo se permiten archivos PDF" }, { status: 400 })
+        if (typeof storagePath !== "string" || !storagePath) {
+            return NextResponse.json({ error: "storagePath requerido" }, { status: 400 })
         }
-        if (file.size > MAX_FILE_SIZE) {
-            return NextResponse.json({ error: "El archivo no puede superar los 20 MB" }, { status: 400 })
+        // Prevent storagePath tampering: must be scoped to the declared category
+        if (!storagePath.startsWith(`${categoryId}/`)) {
+            return NextResponse.json({ error: "storagePath inválido" }, { status: 400 })
         }
 
         const category = await prisma.libraryCategory.findUnique({
             where: { id: categoryId },
             select: { id: true },
         })
-
         if (!category) {
             return NextResponse.json({ error: "La categoría no existe" }, { status: 404 })
         }
-
-        const timestamp = Date.now()
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_")
-        const storagePath = `${categoryId}/${timestamp}-${safeName}`
-
-        await uploadPdf(file, storagePath)
 
         const document = await prisma.libraryDocument.create({
             data: {
@@ -53,7 +52,7 @@ export async function POST(request: Request) {
                 description: typeof description === "string" && description.trim().length > 0
                     ? description.trim()
                     : null,
-                fileName: file.name,
+                fileName,
                 storagePath,
                 categoryId,
             },
@@ -68,9 +67,8 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ ok: true, document }, { status: 201 })
     } catch (error) {
-        const message = error instanceof Error ? error.message : "Error interno al subir documento"
+        const message = error instanceof Error ? error.message : "Error interno al registrar documento"
         const status = message === "No autorizado" ? 401 : 500
-
         return NextResponse.json({ error: message }, { status })
     }
 }

@@ -30,6 +30,16 @@ export async function uploadPdf(file: File, path: string) {
     return data.path
 }
 
+export async function createSignedUploadUrl(storagePath: string) {
+    const supabase = getSupabaseAdmin()
+    const { data, error } = await supabase.storage
+        .from(LIBRARY_BUCKET)
+        .createSignedUploadUrl(storagePath)
+
+    if (error) throw new Error(`Error al generar URL de subida: ${error.message}`)
+    return data
+}
+
 export async function deletePdf(path: string) {
     const supabase = getSupabaseAdmin()
     const { error } = await supabase.storage
