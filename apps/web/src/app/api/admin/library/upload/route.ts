@@ -64,6 +64,8 @@ export async function POST(request: Request) {
         })
 
         revalidatePath("/dashboard/library")
+        revalidatePath("/docs", "layout")
+        revalidatePath("/")
 
         return NextResponse.json({ ok: true, document }, { status: 201 })
     } catch (error) {

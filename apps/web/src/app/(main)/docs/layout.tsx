@@ -3,6 +3,8 @@ import { Separator } from "@/components/ui/separator"
 import { AppSidebar } from "@/components/docs/app-sidebar"
 import prisma from "@pensar/db"
 
+export const dynamic = "force-dynamic"
+
 export default async function DocsLayout({ children }: { children: React.ReactNode }) {
     const categories = await prisma.libraryCategory.findMany({
         include: {

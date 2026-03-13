@@ -4,6 +4,12 @@ import { ensureAdminSession } from "@/lib/admin-auth"
 import { deletePdf } from "@/lib/supabase-storage"
 import { LibraryClient } from "./library-client"
 
+function revalidateLibraryViews() {
+    revalidatePath("/dashboard/library")
+    revalidatePath("/docs", "layout")
+    revalidatePath("/")
+}
+
 async function createCategoryAction(formData: FormData) {
     "use server"
     await ensureAdminSession()
@@ -31,7 +37,7 @@ async function createCategoryAction(formData: FormData) {
         },
     })
 
-    revalidatePath("/dashboard/library")
+    revalidateLibraryViews()
 }
 
 async function updateCategoryAction(formData: FormData) {
@@ -60,7 +66,7 @@ async function updateCategoryAction(formData: FormData) {
         data: { name: name.trim() },
     })
 
-    revalidatePath("/dashboard/library")
+    revalidateLibraryViews()
 }
 
 async function deleteCategoryAction(formData: FormData) {
@@ -83,7 +89,7 @@ async function deleteCategoryAction(formData: FormData) {
         where: { id: categoryId },
     })
 
-    revalidatePath("/dashboard/library")
+    revalidateLibraryViews()
 }
 
 async function deleteDocumentAction(formData: FormData) {
@@ -108,7 +114,7 @@ async function deleteDocumentAction(formData: FormData) {
         where: { id: documentId },
     })
 
-    revalidatePath("/dashboard/library")
+    revalidateLibraryViews()
 }
 
 export default async function LibraryPage() {
