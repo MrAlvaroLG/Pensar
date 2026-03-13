@@ -1,7 +1,6 @@
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { AppSidebar } from "@/components/docs/app-sidebar"
-import { Button } from "@/components/ui/button"
 import prisma from "@pensar/db"
 
 export default async function DocsLayout({ children }: { children: React.ReactNode }) {
@@ -23,13 +22,8 @@ export default async function DocsLayout({ children }: { children: React.ReactNo
                     <SidebarTrigger className="-ml-1" />
                     <Separator orientation="vertical" className="mr-2 h-4!" />
                     <span className="text-sm font-medium">Biblioteca</span>
-                    <div className="ml-auto">
-                        <Button asChild variant="outline" size="sm">
-                            <a href="#docs-top">Inicio</a>
-                        </Button>
-                    </div>
                 </header>
-                <main id="docs-top" className="flex-1 p-4">
+                <main className="flex-1 p-4">
                     {children}
                 </main>
             </SidebarInset>
