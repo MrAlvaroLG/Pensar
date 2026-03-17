@@ -27,24 +27,24 @@ const blurAnimation = {
 
 const steps: StepItem[] = [
     {
-        id: "01",
+        id: "1",
         title: "Inscríbete con una postura",
-        description: "Cada encuentro publica una moción clara y binaria. Te inscribes eligiendo equipo y postura de forma explícita.",
+        description: "Cada encuentro publica una moción clara. Te inscribes eligiendo equipo y postura de forma explícita.",
         detail: "La moción se anuncia con 10-14 días de antelación para que todos puedan prepararse bien.",
         Icon: Flag,
     },
     {
-        id: "02",
+        id: "2",
         title: "Prepárate con tu equipo",
         description: "Construyan su caso con lógica, fuentes verificables y una línea argumental ordenada para cada ronda.",
         detail: "Cada equipo cuenta con titulares y reservas para mantener continuidad y claridad en la exposición.",
         Icon: MessageCircleMore,
     },
     {
-        id: "03",
+        id: "3",
         title: "Debate con orden y respeto",
         description: "El moderador dirige tiempos, turnos y preguntas del público para que el diálogo sea claro y formativo.",
-        detail: "No hay ganadores ni puntuación: el objetivo es comprender mejor, evangelizar y crecer en argumentación.",
+        detail: "No hay ganadores ni puntuación: el objetivo es comprender mejor, crecer y sobre todo PENSAR.",
         Icon: Scale,
     },
 ]
@@ -109,7 +109,7 @@ export default function HowItWorksSection() {
                                 <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-foreground/30 to-transparent" />
                                 <CardContent className="flex h-full flex-col gap-5 p-6 md:p-7">
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-xs font-semibold tracking-[0.2em] text-muted-foreground">STEP {step.id}</span>
+                                        <span className="text-xs font-semibold tracking-[0.2em] text-muted-foreground">PASO {step.id}</span>
                                         <span className="inline-flex rounded-full border border-border/70 bg-background p-2 text-muted-foreground">
                                             <step.Icon className="size-4" />
                                         </span>
