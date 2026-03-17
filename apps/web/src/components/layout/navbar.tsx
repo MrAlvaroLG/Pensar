@@ -15,6 +15,7 @@ const NAV_ITEMS = [
     { href: "/debates", label: "Debates" },
     { href: "/chat", label: "Chat" },
     { href: "/docs", label: "Biblioteca" },
+    { href: "/formato-y-reglas", label: "Formato y reglas" },
 ] as const;
 
 export default function NavBar() {

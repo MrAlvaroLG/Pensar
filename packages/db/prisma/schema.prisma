@@ -81,9 +81,23 @@ model User {
   chatBans         ChatBan[]     @relation("UserBans")
   chatBansIssued   ChatBan[]     @relation("BannedBy")
   chatReports      ChatReport[]
+  suggestions      UserSuggestion[]
 
   @@index([role])
   @@map("user")
+}
+
+model UserSuggestion {
+  id        String   @id @default(cuid())
+  userId    String
+  subject   String
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("user_suggestion")
 }
 
 model Session {

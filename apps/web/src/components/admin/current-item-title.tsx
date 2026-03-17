@@ -7,6 +7,7 @@ const ADMIN_TITLE_BY_ROUTE: Array<{ route: string; title: string }> = [
     { route: "/dashboard/upcoming-debate", title: "Debate Próximo" },
     { route: "/dashboard/debate-registrations", title: "Usuarios Inscritos" },
     { route: "/dashboard/user-stats", title: "Estadísticas de Usuarios" },
+    { route: "/dashboard/suggestions", title: "Peticiones de Usuarios" },
     { route: "/dashboard/users", title: "Lista de Usuarios" },
     { route: "/dashboard/library", title: "Bibliografía" },
     { route: "/dashboard/roles", title: "Roles" },

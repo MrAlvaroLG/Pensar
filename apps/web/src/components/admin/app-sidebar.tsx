@@ -30,6 +30,7 @@ const ADMIN_SECTIONS = [
         items: [
             { label: "Usuarios y Roles", href: "/dashboard/users", icon: Users },
             { label: "Estadisticas", href: "/dashboard/user-stats", icon: ChartColumnBig },
+            { label: "Peticiones", href: "/dashboard/suggestions", icon: MessageSquare },
         ],
         
     },
