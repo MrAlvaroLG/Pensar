@@ -155,7 +155,7 @@ export default function ProfileDialog({ open, onOpenChange, user }: ProfileDialo
                             onClick={() => imageInputRef.current?.click()}
                             className="size-32 md:size-40 border-4 border-background shadow-md">
                                 <AvatarImage src={imageDataUrl ?? undefined} alt={name || "Usuario"} />
-                                <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-semibold">
+                                <AvatarFallback className="bg-primary text-primary-foreground text-4xl md:text-6xl font-semibold">
                                     {initials}
                                 </AvatarFallback>
                             </Avatar>

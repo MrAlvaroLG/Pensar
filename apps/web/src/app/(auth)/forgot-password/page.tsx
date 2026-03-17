@@ -27,6 +27,7 @@ import { PasswordStrength, validatePassword } from "@/components/auth/password-s
 import { ArrowLeft, Mail, ShieldCheck } from "lucide-react"
 
 const RESEND_COOLDOWN = 60
+const isPasswordResetOtpEnabled = process.env.NEXT_PUBLIC_AUTH_PASSWORD_RESET_OTP_ENABLED === "true"
 
 type Step = "email" | "otp"
 
@@ -49,6 +50,11 @@ export default function ForgotPasswordPage() {
     }, [countdown])
 
     const sendCode = useCallback(async () => {
+        if (!isPasswordResetOtpEnabled) {
+            setError("La recuperacion de contrasena esta desactivada temporalmente")
+            return
+        }
+
         setError(null)
         setLoading(true)
         await authClient.emailOtp.requestPasswordReset(
@@ -75,6 +81,11 @@ export default function ForgotPasswordPage() {
     const handleOtpSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError(null)
+
+        if (!isPasswordResetOtpEnabled) {
+            setError("La recuperacion de contrasena esta desactivada temporalmente")
+            return
+        }
 
         if (password !== confirmPassword) {
             setError("Las contraseñas no coinciden")
@@ -124,6 +135,11 @@ export default function ForgotPasswordPage() {
                     </CardHeader>
 
                     <CardContent>
+                        {!isPasswordResetOtpEnabled && (
+                            <p className="mb-4 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700">
+                                Recuperacion de contrasena por OTP desactivada temporalmente.
+                            </p>
+                        )}
                         <form onSubmit={handleEmailSubmit} className="flex flex-col gap-5">
                             <div className="grid gap-2">
                                 <Label htmlFor="forgot-email">Correo Electrónico</Label>
@@ -137,8 +153,8 @@ export default function ForgotPasswordPage() {
                                 />
                             </div>
                             {error && <p className="text-sm text-destructive">{error}</p>}
-                            <Button type="submit" className="w-full" disabled={loading}>
-                                {loading ? "Enviando..." : "Enviar código"}
+                            <Button type="submit" className="w-full" disabled={loading || !isPasswordResetOtpEnabled}>
+                                {isPasswordResetOtpEnabled ? (loading ? "Enviando..." : "Enviar código") : "Temporalmente desactivado"}
                             </Button>
                         </form>
                     </CardContent>
