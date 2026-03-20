@@ -7,7 +7,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { UserRowActions } from "../../../../components/admin/user-row-actions"
+import { UserRowActions } from "@/components/admin/user-row-actions"
 import { ensureAdminSession } from "@/lib/admin-auth"
 import prisma from "@pensar/db"
 import { revalidatePath } from "next/cache"
@@ -18,7 +18,7 @@ interface UserRow {
     email: string
     postura: string | null
     phoneNumber: string | null
-    role: "USER" | "ADMIN"
+    role: "USER" | "ADMIN" | "PUBLISHER"
 }
 
 async function deleteUserAction(formData: FormData) {
@@ -68,7 +68,30 @@ async function makeUserAdminAction(formData: FormData) {
     revalidatePath("/dashboard/users")
 }
 
-async function removeAdminAction(formData: FormData) {
+async function makeUserPublisherAction(formData: FormData) {
+    "use server"
+
+    await ensureAdminSession()
+
+    const userId = formData.get("userId")
+
+    if (typeof userId !== "string" || userId.length === 0) {
+        throw new Error("ID de usuario inválido")
+    }
+
+    await prisma.user.update({
+        where: {
+            id: userId,
+        },
+        data: {
+            role: "PUBLISHER",
+        },
+    })
+
+    revalidatePath("/dashboard/users")
+}
+
+async function makeUserStandardAction(formData: FormData) {
     "use server"
 
     const session = await ensureAdminSession()
@@ -99,15 +122,17 @@ function UsersSectionTable({
     users,
     title,
     emptyMessage,
-    canPromote,
-    canDemote = false,
+    canMakeAdmin = false,
+    canMakePublisher = false,
+    canMakeUser = false,
     currentUserId,
 }: {
     users: UserRow[]
     title: string
     emptyMessage: string
-    canPromote: boolean
-    canDemote?: boolean
+    canMakeAdmin?: boolean
+    canMakePublisher?: boolean
+    canMakeUser?: boolean
     currentUserId?: string
 }) {
     return (
@@ -142,11 +167,13 @@ function UsersSectionTable({
                                 <UserRowActions
                                     userId={user.id}
                                     userName={user.name}
-                                    canPromote={canPromote}
-                                    canDemote={canDemote && user.id !== currentUserId}
+                                    canMakeAdmin={canMakeAdmin}
+                                    canMakePublisher={canMakePublisher}
+                                    canMakeUser={canMakeUser && user.id !== currentUserId}
                                     onDelete={deleteUserAction}
-                                    onPromote={makeUserAdminAction}
-                                    onDemote={removeAdminAction}
+                                    onMakeAdmin={makeUserAdminAction}
+                                    onMakePublisher={makeUserPublisherAction}
+                                    onMakeUser={makeUserStandardAction}
                                 />
                             </TableCell>
                         </TableRow>
@@ -175,6 +202,7 @@ export default async function DashboardUsersPage() {
     })
 
     const adminUsers: UserRow[] = users.filter((user) => user.role === "ADMIN")
+    const publisherUsers: UserRow[] = users.filter((user) => user.role === "PUBLISHER")
     const standardUsers: UserRow[] = users.filter((user) => user.role === "USER")
 
     return (
@@ -183,15 +211,23 @@ export default async function DashboardUsersPage() {
                 users={adminUsers}
                 title="Administradores"
                 emptyMessage="No hay administradores registrados."
-                canPromote={false}
-                canDemote
+                canMakeUser
+                currentUserId={session.user.id}
+            />
+            <UsersSectionTable
+                users={publisherUsers}
+                title="Publishers"
+                emptyMessage="No hay usuarios con rol PUBLISHER."
+                canMakeAdmin
+                canMakeUser
                 currentUserId={session.user.id}
             />
             <UsersSectionTable
                 users={standardUsers}
                 title="Usuarios"
                 emptyMessage="No hay usuarios con rol USER."
-                canPromote
+                canMakeAdmin
+                canMakePublisher
             />
         </section>
     )

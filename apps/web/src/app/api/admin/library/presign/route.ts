@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server"
 import prisma from "@pensar/db"
-import { ensureAdminSession } from "@/lib/admin-auth"
+import { ensureLibrarySession } from "@/lib/admin-auth"
 import { createSignedUploadUrl } from "@/lib/supabase-storage"
 
 export async function POST(request: Request) {
     try {
-        await ensureAdminSession()
+        await ensureLibrarySession()
 
         const body = await request.json() as { categoryId?: string; fileName?: string }
         const { categoryId, fileName } = body

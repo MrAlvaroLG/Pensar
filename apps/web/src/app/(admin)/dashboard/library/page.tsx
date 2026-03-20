@@ -1,6 +1,6 @@
 import prisma from "@pensar/db"
 import { revalidatePath } from "next/cache"
-import { ensureAdminSession } from "@/lib/admin-auth"
+import { ensureLibrarySession } from "@/lib/admin-auth"
 import { deletePdf } from "@/lib/supabase-storage"
 import { LibraryClient } from "./library-client"
 
@@ -12,7 +12,7 @@ function revalidateLibraryViews() {
 
 async function createCategoryAction(formData: FormData) {
     "use server"
-    await ensureAdminSession()
+    await ensureLibrarySession()
 
     const name = formData.get("name")
     if (typeof name !== "string" || name.trim().length === 0) {
@@ -42,7 +42,7 @@ async function createCategoryAction(formData: FormData) {
 
 async function updateCategoryAction(formData: FormData) {
     "use server"
-    await ensureAdminSession()
+    await ensureLibrarySession()
 
     const categoryId = formData.get("categoryId")
     const name = formData.get("name")
@@ -71,7 +71,7 @@ async function updateCategoryAction(formData: FormData) {
 
 async function deleteCategoryAction(formData: FormData) {
     "use server"
-    await ensureAdminSession()
+    await ensureLibrarySession()
 
     const categoryId = formData.get("categoryId")
     if (typeof categoryId !== "string" || categoryId.length === 0) {
@@ -94,7 +94,7 @@ async function deleteCategoryAction(formData: FormData) {
 
 async function deleteDocumentAction(formData: FormData) {
     "use server"
-    await ensureAdminSession()
+    await ensureLibrarySession()
 
     const documentId = formData.get("documentId")
     if (typeof documentId !== "string" || documentId.length === 0) {
@@ -118,7 +118,7 @@ async function deleteDocumentAction(formData: FormData) {
 }
 
 export default async function LibraryPage() {
-    await ensureAdminSession()
+    await ensureLibrarySession()
 
     const categories = await prisma.libraryCategory.findMany({
         include: { _count: { select: { documents: true } } },

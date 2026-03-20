@@ -326,7 +326,7 @@ export default function ChatSection() {
                                     </AnimatePresence>
                                 </div>
 
-                                <div className="flex flex-1 flex-col overflow-hidden rounded-[1.75rem] border border-border/70 bg-background/90 p-3 shadow-inner shadow-black/5 backdrop-blur-sm sm:p-4">
+                                <div className="flex h-160 flex-col overflow-hidden rounded-[1.75rem] border border-border/70 bg-background/90 p-3 shadow-inner shadow-black/5 backdrop-blur-sm sm:h-152 sm:p-4 lg:h-160">
                                     <div className="flex items-center justify-between gap-3 border-b border-border/70 pb-4">
                                         <div className="space-y-1">
                                             <p className="text-sm font-medium text-foreground">Canal del equipo</p>
@@ -339,7 +339,7 @@ export default function ChatSection() {
                                     </div>
 
                                     <div className="mt-4 flex flex-1 flex-col overflow-hidden rounded-[1.35rem] border border-border/70 bg-muted/25 p-2.5 sm:mt-5 sm:p-3">
-                                        <div className="min-h-88 flex-1 space-y-3 overflow-hidden sm:min-h-96 lg:min-h-0">
+                                        <div className="min-h-0 flex-1 space-y-3 overflow-hidden">
                                             <AnimatePresence mode="popLayout">
                                                 {visibleMessages.map((message) => (
                                                     <motion.div

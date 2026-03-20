@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import prisma from "@pensar/db"
 import { revalidatePath } from "next/cache"
-import { ensureAdminSession } from "@/lib/admin-auth"
+import { ensureLibrarySession } from "@/lib/admin-auth"
 
 /**
  * Registers a document in the database after the file has been uploaded
@@ -10,7 +10,7 @@ import { ensureAdminSession } from "@/lib/admin-auth"
  */
 export async function POST(request: Request) {
     try {
-        await ensureAdminSession()
+        await ensureLibrarySession()
 
         const body = await request.json() as {
             title?: string

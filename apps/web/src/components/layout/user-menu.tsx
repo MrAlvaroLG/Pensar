@@ -15,6 +15,7 @@ import {
     LogOut,
     User,
     LayoutDashboard,
+    Library,
 } from "lucide-react"
 import ProfileDialog from "@/components/layout/profile-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -182,6 +183,15 @@ export default function UserMenu() {
                             >
                                 <LayoutDashboard />
                                 <span>Administrador</span>
+                            </DropdownMenuItem>
+                        )}
+                        {userRole === "PUBLISHER" && (
+                            <DropdownMenuItem
+                                onClick={() => router.push("/dashboard/library")}
+                                className="cursor-pointer"
+                            >
+                                <Library />
+                                <span>Bibliografía</span>
                             </DropdownMenuItem>
                         )}
                         <DropdownMenuItem

@@ -15,13 +15,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         redirect("/login")
     }
 
-    if (session.user.role !== "ADMIN") {
+    if (session.user.role !== "ADMIN" && session.user.role !== "PUBLISHER") {
         redirect("/")
     }
 
     return (
         <SidebarProvider>
-            <AppSidebar />
+            <AppSidebar role={session.user.role} />
             <SidebarInset>
                 <header className="flex h-12 items-center gap-2 border-b px-4">
                     <SidebarTrigger className="-ml-1" />

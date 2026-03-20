@@ -23,6 +23,9 @@ import {
 import { Button } from "@/components/ui/button"
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar>
+interface DashboardSidebarProps extends AppSidebarProps {
+    role: string
+}
 
 const ADMIN_SECTIONS = [
     {
@@ -59,8 +62,9 @@ const ADMIN_SECTIONS = [
     },
 ] as const
 
-export function AppSidebar({ ...props }: AppSidebarProps) {
+export function AppSidebar({ role, ...props }: DashboardSidebarProps) {
     const pathname = usePathname()
+    const sections = role === "PUBLISHER" ? [ADMIN_SECTIONS[2]] : ADMIN_SECTIONS
 
     const isItemActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
 
@@ -68,7 +72,9 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
         <Sidebar className="h-[calc(100svh-4rem)]!" {...props}>
         <SidebarHeader className="p-3">
             <div className="flex items-center justify-between gap-2">
-                <span className="text-sm font-medium">Administración</span>
+                <span className="text-sm font-medium">
+                    {role === "PUBLISHER" ? "Bibliografía" : "Administración"}
+                </span>
                 <Button asChild size="sm" variant="outline" className="gap-2">
                     <Link href="/">
                         <House className="size-4" />
@@ -79,7 +85,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
         </SidebarHeader>
 
         <SidebarContent>
-            {ADMIN_SECTIONS.map((section) => {
+            {sections.map((section) => {
                 const items = (
                     <SidebarGroupContent>
                         <SidebarMenu>

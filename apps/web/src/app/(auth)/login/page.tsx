@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
 import { authClient } from "@/lib/auth-client"
@@ -20,7 +20,6 @@ import { PasswordInput } from "@/components/auth/password-input"
 
 export default function LoginPage() {
     const router = useRouter()
-    const searchParams = useSearchParams()
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [error, setError] = useState<string | null>(null)
@@ -64,11 +63,9 @@ export default function LoginPage() {
                 <CardDescription>Por favor, introduzca sus datos para acceder</CardDescription>
             </CardHeader>
             <CardContent>
-                {searchParams.get("verified") === "true" && (
-                    <p className="mb-4 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700">
-                        Cuenta verificada. Ya puedes iniciar sesion.
-                    </p>
-                )}
+                <Suspense fallback={null}>
+                    <VerificationNotice />
+                </Suspense>
                 <form onSubmit={handleLogin} className="flex flex-col gap-5">
                     <div className="grid gap-2">
                         <Label htmlFor="login-email">Correo Electrónico</Label>
@@ -114,5 +111,19 @@ export default function LoginPage() {
                 />
             </CardFooter>
         </Card>
+    )
+}
+
+function VerificationNotice() {
+    const searchParams = useSearchParams()
+
+    if (searchParams.get("verified") !== "true") {
+        return null
+    }
+
+    return (
+        <p className="mb-4 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700">
+            Cuenta verificada. Ya puedes iniciar sesion.
+        </p>
     )
 }
