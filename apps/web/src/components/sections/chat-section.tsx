@@ -326,7 +326,7 @@ export default function ChatSection() {
                                     </AnimatePresence>
                                 </div>
 
-                                <div className="flex h-160 flex-col overflow-hidden rounded-[1.75rem] border border-border/70 bg-background/90 p-3 shadow-inner shadow-black/5 backdrop-blur-sm sm:h-152 sm:p-4 lg:h-160">
+                                <div className="flex h-170 flex-col overflow-hidden rounded-[1.75rem] border border-border/70 bg-background/90 p-3 shadow-inner shadow-black/5 backdrop-blur-sm sm:h-152 sm:p-4 lg:h-160">
                                     <div className="flex items-center justify-between gap-3 border-b border-border/70 pb-4">
                                         <div className="space-y-1">
                                             <p className="text-sm font-medium text-foreground">Canal del equipo</p>
