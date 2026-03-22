@@ -40,6 +40,43 @@ export interface ReportRow {
     }
 }
 
+interface RegistrationQueryRow {
+    id: string
+    userId: string
+    team: string
+    user: {
+        id: string
+        name: string
+        email: string
+    }
+}
+
+interface ActiveBanRow {
+    id: string
+    userId: string
+    reason: string | null
+    expiresAt: Date | null
+}
+
+interface ReportQueryRow {
+    id: string
+    reason: string | null
+    status: string
+    createdAt: Date
+    reporter: {
+        name: string
+    }
+    message: {
+        id: string
+        content: string
+        team: string
+        user: {
+            id: string
+            name: string
+        }
+    }
+}
+
 export default async function BansPage() {
     const adminSession = await ensureAdminSession().catch(() => null)
     if (!adminSession) redirect("/login")
@@ -152,7 +189,11 @@ export default async function BansPage() {
         )
     }
 
-    const [registrations, activeBans, reports] = await Promise.all([
+    const [registrations, activeBans, reports]: [
+        RegistrationQueryRow[],
+        ActiveBanRow[],
+        ReportQueryRow[]
+    ] = await Promise.all([
         prisma.debateRegistration.findMany({
             where: {
                 debateId: debate.id,
@@ -181,9 +222,9 @@ export default async function BansPage() {
         }),
     ])
 
-    const banMap = new Map(activeBans.map((b) => [b.userId, b]))
+    const banMap = new Map(activeBans.map((b: ActiveBanRow) => [b.userId, b]))
 
-    const rows: RegistrationWithBan[] = registrations.map((r) => {
+    const rows: RegistrationWithBan[] = registrations.map((r: RegistrationQueryRow) => {
         const ban = banMap.get(r.userId)
         return {
             registrationId: r.id,
@@ -201,7 +242,7 @@ export default async function BansPage() {
         }
     })
 
-    const reportRows: ReportRow[] = reports.map((r) => ({
+    const reportRows: ReportRow[] = reports.map((r: ReportQueryRow) => ({
         reportId: r.id,
         reportedBy: r.reporter.name,
         reason: r.reason,
