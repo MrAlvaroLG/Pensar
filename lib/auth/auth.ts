@@ -1,10 +1,9 @@
 import { betterAuth } from "better-auth"
 import { prismaAdapter } from "@better-auth/prisma-adapter"
 import { emailOTP } from "better-auth/plugins"
-import { Resend } from "resend"
+import { sendMail } from "@/lib/auth/smtp-mailer"
 import prisma from "@/lib/db"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
 const signupOtpEnabled = process.env.NEXT_PUBLIC_AUTH_SIGNUP_OTP_ENABLED === "true"
 const passwordResetOtpEnabled = process.env.NEXT_PUBLIC_AUTH_PASSWORD_RESET_OTP_ENABLED === "true"
 const emailDeliveryEnabled = process.env.AUTH_EMAIL_DELIVERY_ENABLED !== "false"
@@ -29,47 +28,44 @@ function buildOtpEmailTemplate(otp: string, title: string, description: string) 
 async function sendOtpEmail({ email, otp, type }: { email: string; otp: string; type: "email-verification" | "forget-password" | "sign-in" | "change-email" }) {
     const messageByType = {
         "email-verification": {
-            subject: "Codigo para verificar tu cuenta",
+            subject: "Código para verificar tu cuenta",
             title: "Verifica tu correo",
-            description: "Usa este codigo para activar tu cuenta. Expira en <strong>10 minutos</strong>.",
+            description: "Usa este código para activar tu cuenta. Expira en <strong>10 minutos</strong>.",
         },
         "forget-password": {
-            subject: "Codigo para recuperar tu contrasena",
-            title: "Recupera tu contrasena",
-            description: "Usa este codigo para restablecer tu contrasena. Expira en <strong>10 minutos</strong>.",
+            subject: "Código para recuperar tu contraseña",
+            title: "Recupera tu contraseña",
+            description: "Usa este código para restablecer tu contraseña. Expira en <strong>10 minutos</strong>.",
         },
         "sign-in": {
-            subject: "Codigo de acceso",
-            title: "Inicia sesion con codigo",
-            description: "Usa este codigo para iniciar sesion. Expira en <strong>10 minutos</strong>.",
+            subject: "Código de acceso",
+            title: "Inicia sesion con código",
+            description: "Usa este código para iniciar sesion. Expira en <strong>10 minutos</strong>.",
         },
         "change-email": {
-            subject: "Codigo para cambiar tu correo",
+            subject: "Código para cambiar tu correo",
             title: "Confirma cambio de correo",
-            description: "Usa este codigo para confirmar el cambio de correo. Expira en <strong>10 minutos</strong>.",
+            description: "Usa este código para confirmar el cambio de correo. Expira en <strong>10 minutos</strong>.",
         },
     } as const
 
     const message = messageByType[type]
 
-    if (!emailDeliveryEnabled || !process.env.RESEND_API_KEY) {
+    if (!emailDeliveryEnabled) {
         console.log(`[Auth][OTP:DEV] type=${type} email=${email} otp=${otp}`)
         return
     }
 
-    const { data, error } = await resend.emails.send({
-        from: "Pensar <onboarding@resend.dev>",
-        to: email,
-        subject: message.subject,
-        html: buildOtpEmailTemplate(otp, message.title, message.description),
-    })
-
-    if (error) {
-        console.error("[Auth] Error enviando OTP con Resend:", error)
-        return
+    try {
+        const info = await sendMail({
+            to: email,
+            subject: message.subject,
+            html: buildOtpEmailTemplate(otp, message.title, message.description),
+        })
+        console.log("[Auth] OTP enviado correctamente. MessageId:", info.messageId)
+    } catch (error) {
+        console.error("[Auth] Error enviando OTP con SMTP:", error)
     }
-
-    console.log("[Auth] OTP enviado correctamente. ID:", data?.id)
 }
 
 export const auth = betterAuth({

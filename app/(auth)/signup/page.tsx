@@ -171,9 +171,6 @@ export default function SignUpPage() {
                             height={50}
                             priority
                         />
-                        <div className="mb-1 flex size-11 items-center justify-center rounded-full bg-muted">
-                            <Mail className="size-5 text-muted-foreground" />
-                        </div>
                         <CardTitle>Únete a la comunidad</CardTitle>
                         <CardDescription>Cree su cuenta y comience a debatir hoy mismo</CardDescription>
                     </CardHeader>
@@ -266,9 +263,6 @@ export default function SignUpPage() {
                             height={50}
                             priority
                         />
-                        <div className="mb-1 flex size-11 items-center justify-center rounded-full bg-muted">
-                            <ShieldCheck className="size-5 text-muted-foreground" />
-                        </div>
                         <CardTitle>Verifica tu correo</CardTitle>
                         <CardDescription>
                             Enviamos un código de 6 dígitos a <span className="font-medium text-foreground">{email}</span>
