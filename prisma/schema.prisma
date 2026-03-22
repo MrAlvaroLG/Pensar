@@ -1,0 +1,309 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+enum Role{
+  USER
+  ADMIN
+  PUBLISHER
+}
+
+enum Postura {
+  TEISTA
+  ATEO
+  AGNOSTICO
+  DEISTA
+  PANTEISTA
+  OTRO
+}
+
+enum DebateStatus {
+  DRAFT
+  SCHEDULED
+  LIVE
+  FINISHED
+}
+
+enum Team {
+  none
+  red
+  blue
+  public
+}
+
+enum RegistrationStatus {
+  participant
+  orator
+  reserve
+}
+
+enum SummaryBlockTeam {
+  RED
+  BLUE
+  PUBLIC
+}
+
+enum ChatTeam {
+  red
+  blue
+}
+
+enum ChatFileType {
+  IMAGE
+  AUDIO
+  DOCUMENT
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  role          Role      @default(USER)
+  name          String
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  postura       Postura   @default(OTRO)
+  phoneNumber   String?
+  sessions        Session[]
+  accounts         Account[]
+  registrations    DebateRegistration[]
+  chatMessages     ChatMessage[]
+  chatBans         ChatBan[]     @relation("UserBans")
+  chatBansIssued   ChatBan[]     @relation("BannedBy")
+  chatReports      ChatReport[]
+  suggestions      UserSuggestion[]
+
+  @@index([role])
+  @@map("user")
+}
+
+model UserSuggestion {
+  id        String   @id @default(cuid())
+  userId    String
+  subject   String
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("user_suggestion")
+}
+
+model Session {
+  id            String    @id
+  expiresAt     DateTime
+  token         String    @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  ipAddress     String?
+  userAgent     String?
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?  @default(now())
+  updatedAt  DateTime?  @updatedAt
+
+  @@map("verification")
+}
+
+model Debate {
+  id               String              @id @default(cuid())
+  title            String
+  subtitle         String
+  question         String
+  thesis           String
+  startAt          DateTime
+  endAt            DateTime
+  status           DebateStatus        @default(DRAFT)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  bibliography     DebateBibliography[]
+  registrations    DebateRegistration[]
+  summaryBlocks    DebateSummaryBlock[]
+  bibliographyDocs DebateBibliographyDoc[]
+  chatMessages     ChatMessage[]
+  chatBans         ChatBan[]
+
+  @@index([status, startAt])
+  @@index([endAt])
+  @@map("debate")
+}
+
+model DebateRegistration {
+  id        String             @id @default(cuid())
+  userId    String
+  debateId  String
+  team      Team
+  status    RegistrationStatus @default(participant)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  debate    Debate             @relation(fields: [debateId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, debateId])
+  @@index([debateId, team, status])
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@map("debate_registration")
+}
+
+model DebateBibliography {
+  id        String   @id @default(cuid())
+  label     String
+  url       String
+  debateId  String
+  debate    Debate   @relation(fields: [debateId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([debateId])
+  @@map("debate_bibliography")
+}
+
+model DebateSummaryBlock {
+  id        String           @id @default(cuid())
+  debateId  String
+  team      SummaryBlockTeam
+  content   String
+  order     Int              @default(0)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  debate    Debate           @relation(fields: [debateId], references: [id], onDelete: Cascade)
+
+  @@index([debateId])
+  @@map("debate_summary_block")
+}
+
+model DebateBibliographyDoc {
+  id          String   @id @default(cuid())
+  debateId    String
+  title       String
+  description String?
+  fileName    String
+  storagePath String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  debate      Debate   @relation(fields: [debateId], references: [id], onDelete: Cascade)
+
+  @@index([debateId])
+  @@map("debate_bibliography_doc")
+}
+
+model LibraryCategory {
+  id        String             @id @default(cuid())
+  name      String             @unique
+  icon      String             @default("FolderOpen")
+  order     Int                @default(0)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  documents LibraryDocument[]
+
+  @@map("library_category")
+}
+
+model LibraryDocument {
+  id          String          @id @default(cuid())
+  title       String
+  description String?
+  fileName    String
+  storagePath String
+  categoryId  String
+  category    LibraryCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([categoryId])
+  @@map("library_document")
+}
+
+model ChatMessage {
+  id          String        @id @default(cuid())
+  debateId    String
+  userId      String
+  team        ChatTeam
+  content     String        @default("")
+  fileUrl     String?
+  fileType    ChatFileType?
+  fileName    String?
+  deleted     Boolean       @default(false)
+  deletedAt   DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  debate      Debate        @relation(fields: [debateId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reports     ChatReport[]
+
+  @@index([debateId, team, createdAt])
+  @@index([userId])
+  @@map("chat_message")
+}
+
+model ChatBan {
+  id        String    @id @default(cuid())
+  userId    String
+  debateId  String
+  bannedBy  String
+  reason    String?
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation("UserBans", fields: [userId], references: [id], onDelete: Cascade)
+  debate    Debate    @relation(fields: [debateId], references: [id], onDelete: Cascade)
+  admin     User      @relation("BannedBy", fields: [bannedBy], references: [id])
+
+  @@unique([userId, debateId])
+  @@index([debateId])
+  @@map("chat_ban")
+}
+
+model ChatReport {
+  id         String       @id @default(cuid())
+  messageId  String
+  reportedBy String
+  reason     String?
+  status     ReportStatus @default(PENDING)
+  createdAt  DateTime     @default(now())
+  message    ChatMessage  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  reporter   User         @relation(fields: [reportedBy], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@index([reportedBy])
+  @@index([status])
+  @@map("chat_report")
+}
