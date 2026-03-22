@@ -1,5 +1,6 @@
 import Link from "next/link"
-import prisma, { type DebateStatus } from "@/lib/db"
+import type { DebateStatus } from "@prisma/client"
+import prisma from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"

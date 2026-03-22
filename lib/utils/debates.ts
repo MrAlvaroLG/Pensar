@@ -1,4 +1,5 @@
-import prisma, { DebateStatus } from "@/lib/db"
+import type { DebateStatus } from "@prisma/client"
+import prisma from "@/lib/db"
 import { unstable_noStore as noStore } from "next/cache"
 import { isDebateTeam, type DebateRegistrationStatus, type DebateTeam, type SummaryBlockTeam } from "@/lib/debate-domain"
 
