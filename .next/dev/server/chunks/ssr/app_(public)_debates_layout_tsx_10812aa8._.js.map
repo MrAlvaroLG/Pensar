@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///home/alvarolg/Work/Pensar/app/%28public%29/debates/layout.tsx"],"sourcesContent":["export default function DebatesLayout({ children }: { children: React.ReactNode }) {\n    return (\n        <main className=\"pt-16\">\n            {children}\n        </main>\n    )\n}"],"names":[],"mappings":";;;;;;AAAe,SAAS,cAAc,EAAE,QAAQ,EAAiC;IAC7E,qBACI,8OAAC;QAAK,WAAU;kBACX;;;;;;AAGb"}}]
+}

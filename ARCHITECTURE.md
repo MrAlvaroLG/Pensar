@@ -21,7 +21,7 @@ Monorepo basado en:
 pensar-monorepo/
 │
 ├── apps/
-│   └── web/        → Aplicación pública + panel de administración (/dashboard)
+│   └── web/        → Aplicación pública + panel de administración (/admin/dashboard)
 │
 ├── packages/
 │   ├── db/         → Prisma schema + Prisma Client
@@ -69,7 +69,7 @@ Responsable de:
 * Login
 * Inscripción a debates
 * Descarga de bibliografía
-* Panel de administración (`/dashboard`, protegido por rol ADMIN):
+* Panel de administración (`/admin/dashboard`, protegido por rol ADMIN):
   * Crear debates
   * Activar/desactivar inscripciones
   * Ver inscritos
@@ -204,7 +204,7 @@ apps/web
 1. No permitir múltiples inscripciones por usuario por debate.
 2. Toda validación crítica debe ser server-side.
 3. Nunca exponer SERVICE_ROLE_KEY en frontend.
-4. Middleware debe proteger rutas `/dashboard` (role = ADMIN).
+4. Middleware debe proteger rutas `/admin/dashboard` (role = ADMIN).
 5. Prisma solo debe inicializarse una vez (singleton pattern).
 6. Los equipos posibles son únicamente:
 

@@ -1,0 +1,20 @@
+{
+  "node": {
+    "4042baca74d58e1dde0a418db4d6f915f52474f058": {
+      "workers": {
+        "app/(admin)/admin/dashboard/(admin-only)/upcoming-debate/page": {
+          "moduleId": "[project]/.next-internal/server/app/(admin)/admin/dashboard/(admin-only)/upcoming-debate/page/actions.js { ACTIONS_MODULE0 => \"[project]/app/(admin)/admin/dashboard/(admin-only)/upcoming-debate/page.tsx [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": true,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/(admin)/admin/dashboard/(admin-only)/upcoming-debate/page.tsx"
+        }
+      },
+      "layer": {
+        "app/(admin)/admin/dashboard/(admin-only)/upcoming-debate/page": "rsc"
+      },
+      "exportedName": "$$RSC_SERVER_ACTION_0",
+      "filename": "app/(admin)/admin/dashboard/(admin-only)/upcoming-debate/page.tsx"
+    }
+  },
+  "edge": {}
+}

@@ -1,0 +1,20 @@
+{
+  "node": {
+    "400233877e980c447e7f9f2747613194f9beebc4c3": {
+      "workers": {
+        "app/(admin)/admin/dashboard/(admin-only)/past-debates/page": {
+          "moduleId": "[project]/.next-internal/server/app/(admin)/admin/dashboard/(admin-only)/past-debates/page/actions.js { ACTIONS_MODULE0 => \"[project]/app/(admin)/admin/dashboard/(admin-only)/past-debates/page.tsx [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": true,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/(admin)/admin/dashboard/(admin-only)/past-debates/page.tsx"
+        }
+      },
+      "layer": {
+        "app/(admin)/admin/dashboard/(admin-only)/past-debates/page": "rsc"
+      },
+      "exportedName": "$$RSC_SERVER_ACTION_0",
+      "filename": "app/(admin)/admin/dashboard/(admin-only)/past-debates/page.tsx"
+    }
+  },
+  "edge": {}
+}

@@ -1,0 +1,20 @@
+{
+  "node": {
+    "408620af9da4a5016283b2f30d55f830333abf15b4": {
+      "workers": {
+        "app/(admin)/admin/dashboard/(admin-only)/suggestions/page": {
+          "moduleId": "[project]/.next-internal/server/app/(admin)/admin/dashboard/(admin-only)/suggestions/page/actions.js { ACTIONS_MODULE0 => \"[project]/app/(admin)/admin/dashboard/(admin-only)/suggestions/page.tsx [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": true,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/(admin)/admin/dashboard/(admin-only)/suggestions/page.tsx"
+        }
+      },
+      "layer": {
+        "app/(admin)/admin/dashboard/(admin-only)/suggestions/page": "rsc"
+      },
+      "exportedName": "$$RSC_SERVER_ACTION_0",
+      "filename": "app/(admin)/admin/dashboard/(admin-only)/suggestions/page.tsx"
+    }
+  },
+  "edge": {}
+}

@@ -1,0 +1,65 @@
+{
+  "node": {
+    "4058b524576d477b26da394bfa01628115252b56f6": {
+      "workers": {
+        "app/(admin)/admin/dashboard/(admin-only)/users/page": {
+          "moduleId": "[project]/.next-internal/server/app/(admin)/admin/dashboard/(admin-only)/users/page/actions.js { ACTIONS_MODULE0 => \"[project]/app/(admin)/admin/dashboard/(admin-only)/users/page.tsx [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": true,
+          "exportedName": "$$RSC_SERVER_ACTION_3",
+          "filename": "app/(admin)/admin/dashboard/(admin-only)/users/page.tsx"
+        }
+      },
+      "layer": {
+        "app/(admin)/admin/dashboard/(admin-only)/users/page": "rsc"
+      },
+      "exportedName": "$$RSC_SERVER_ACTION_3",
+      "filename": "app/(admin)/admin/dashboard/(admin-only)/users/page.tsx"
+    },
+    "405cd49f185b1c44b200166a6fd74a943183b7c774": {
+      "workers": {
+        "app/(admin)/admin/dashboard/(admin-only)/users/page": {
+          "moduleId": "[project]/.next-internal/server/app/(admin)/admin/dashboard/(admin-only)/users/page/actions.js { ACTIONS_MODULE0 => \"[project]/app/(admin)/admin/dashboard/(admin-only)/users/page.tsx [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": true,
+          "exportedName": "$$RSC_SERVER_ACTION_1",
+          "filename": "app/(admin)/admin/dashboard/(admin-only)/users/page.tsx"
+        }
+      },
+      "layer": {
+        "app/(admin)/admin/dashboard/(admin-only)/users/page": "rsc"
+      },
+      "exportedName": "$$RSC_SERVER_ACTION_1",
+      "filename": "app/(admin)/admin/dashboard/(admin-only)/users/page.tsx"
+    },
+    "4097e7823bc4e4b909f39e0bae2044feeb093e8df0": {
+      "workers": {
+        "app/(admin)/admin/dashboard/(admin-only)/users/page": {
+          "moduleId": "[project]/.next-internal/server/app/(admin)/admin/dashboard/(admin-only)/users/page/actions.js { ACTIONS_MODULE0 => \"[project]/app/(admin)/admin/dashboard/(admin-only)/users/page.tsx [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": true,
+          "exportedName": "$$RSC_SERVER_ACTION_2",
+          "filename": "app/(admin)/admin/dashboard/(admin-only)/users/page.tsx"
+        }
+      },
+      "layer": {
+        "app/(admin)/admin/dashboard/(admin-only)/users/page": "rsc"
+      },
+      "exportedName": "$$RSC_SERVER_ACTION_2",
+      "filename": "app/(admin)/admin/dashboard/(admin-only)/users/page.tsx"
+    },
+    "40991792b75cb8061f9d3c0e32914866f4b0d83634": {
+      "workers": {
+        "app/(admin)/admin/dashboard/(admin-only)/users/page": {
+          "moduleId": "[project]/.next-internal/server/app/(admin)/admin/dashboard/(admin-only)/users/page/actions.js { ACTIONS_MODULE0 => \"[project]/app/(admin)/admin/dashboard/(admin-only)/users/page.tsx [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": true,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/(admin)/admin/dashboard/(admin-only)/users/page.tsx"
+        }
+      },
+      "layer": {
+        "app/(admin)/admin/dashboard/(admin-only)/users/page": "rsc"
+      },
+      "exportedName": "$$RSC_SERVER_ACTION_0",
+      "filename": "app/(admin)/admin/dashboard/(admin-only)/users/page.tsx"
+    }
+  },
+  "edge": {}
+}

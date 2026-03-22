@@ -1,0 +1,3 @@
+{
+  "/(public)/debates/unirse/[team]/page": "app/(public)/debates/unirse/[team]/page.js"
+}

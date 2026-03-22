@@ -2,12 +2,7 @@
 
 Plataforma web para gestionar debates mensuales.
 
-Este repositorio es un monorepo con `npm workspaces` y `Turborepo` que contiene:
-
-- App web publica + panel admin (`apps/web`)
-- Paquete de base de datos con Prisma (`packages/db`)
-- Paquete de UI compartida (`packages/ui`)
-- Paquete de utilidades compartidas (`packages/lib`)
+Este repositorio ahora es una sola aplicacion Next.js (sin monorepo).
 
 ## Stack
 
@@ -23,16 +18,19 @@ Este repositorio es un monorepo con `npm workspaces` y `Turborepo` que contiene:
 
 ```text
 .
-├── apps/
-│   └── web/                # App principal (public + auth + admin)
-├── packages/
-│   ├── db/                 # Prisma schema, client y scripts DB
-│   ├── ui/                 # Componentes compartidos
-│   └── lib/                # Utilidades compartidas
+├── app/                    # App Router (public, auth, admin, api)
+├── components/             # Componentes de negocio
+├── ui/                     # Componentes UI base (shadcn)
+├── lib/
+│   ├── db/                 # Prisma client + schema + scripts
+│   ├── auth/               # Auth server/client helpers
+│   └── utils/              # Utilidades de dominio
+├── hooks/
+├── types/
+├── middleware.ts
 ├── ARCHITECTURE.md
 ├── README.md
-├── package.json
-└── turbo.json
+└── package.json
 ```
 
 ## Requisitos
@@ -93,16 +91,16 @@ npm run lint
 
 ```bash
 # Prisma Client
-npm run db:generate --workspace @pensar/db
+npm run db:generate
 
 # Sync schema -> DB
-npm run db:push --workspace @pensar/db
+npm run db:push
 
 # Prisma Studio
-npm run db:studio --workspace @pensar/db
+npm run db:studio
 
 # Seed de debates
-npm run db:seed:debates --workspace @pensar/db
+npm run db:seed:debates
 ```
 
 ## App Web (Rutas Principales)
@@ -118,7 +116,7 @@ npm run db:seed:debates --workspace @pensar/db
 	- `/signup`
 	- `/forgot-password`
 - Admin:
-	- `/dashboard` (protegido por middleware y rol `ADMIN`)
+	- `/admin/dashboard` (protegido por middleware y rol `ADMIN`)
 
 ## Reglas De Dominio
 
@@ -132,15 +130,15 @@ npm run db:seed:debates --workspace @pensar/db
 
 1. Configurar `.env`.
 2. Ejecutar `npm install`.
-3. Generar cliente Prisma con `npm run db:generate --workspace @pensar/db`.
-4. Aplicar schema con `npm run db:push --workspace @pensar/db`.
+3. Generar cliente Prisma con `npm run db:generate`.
+4. Aplicar schema con `npm run db:push`.
 5. Levantar entorno local con `npm run dev`.
 
 ## Deploy
 
 - Plataforma objetivo: Vercel
-- Proyecto desplegado: `apps/web`
-- Root directory en Vercel: `apps/web`
+- Proyecto desplegado: repositorio raiz
+- Root directory en Vercel: `.`
 
 ## Documentacion Adicional
 
