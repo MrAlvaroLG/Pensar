@@ -7,6 +7,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar"
 import { Badge } from "@/ui/badge"
 import { FileText, Music, Image as ImageIcon } from "lucide-react"
 
+interface ChatMessageRow {
+    id: string
+    content: string
+    fileUrl: string | null
+    fileType: string | null
+    fileName: string | null
+    createdAt: Date
+    user: {
+        name: string
+        image: string | null
+    }
+}
+
 function formatTime(date: Date) {
     return date.toLocaleString("es-ES", {
         day: "2-digit",
@@ -87,7 +100,7 @@ export default async function AdminChatPage() {
         )
     }
 
-    const [redMessages, blueMessages] = await Promise.all([
+    const [redMessages, blueMessages]: [ChatMessageRow[], ChatMessageRow[]] = await Promise.all([
         prisma.chatMessage.findMany({
             where: { debateId: debate.id, team: "red", deleted: false },
             orderBy: { createdAt: "asc" },
@@ -129,7 +142,7 @@ export default async function AdminChatPage() {
                         </p>
                     ) : (
                         <div className="max-h-[70vh] overflow-y-auto">
-                            {redMessages.map((m) => (
+                            {redMessages.map((m: ChatMessageRow) => (
                                 <MessageItem key={m.id} msg={m} />
                             ))}
                         </div>
@@ -150,7 +163,7 @@ export default async function AdminChatPage() {
                         </p>
                     ) : (
                         <div className="max-h-[70vh] overflow-y-auto">
-                            {blueMessages.map((m) => (
+                            {blueMessages.map((m: ChatMessageRow) => (
                                 <MessageItem key={m.id} msg={m} />
                             ))}
                         </div>
