@@ -125,9 +125,6 @@ export default function ForgotPasswordPage() {
                             height={50}
                             priority
                         />
-                        <div className="mb-1 flex size-11 items-center justify-center rounded-full bg-muted">
-                            <Mail className="size-5 text-muted-foreground" />
-                        </div>
                         <CardTitle>Recuperar contraseña</CardTitle>
                         <CardDescription>
                             Introduce tu correo y te enviaremos un código de verificación
