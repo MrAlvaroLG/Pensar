@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 24, "column": 0}, "map": {"version":3,"sources":["file:///home/alvarolg/Work/Pensar/app/%28admin%29/admin/dashboard/page.tsx"],"sourcesContent":["import { headers } from \"next/headers\"\nimport { redirect } from \"next/navigation\"\nimport { auth } from \"@/lib/auth\"\n\nexport default async function DashboardPage() {\n    const session = await auth.api.getSession({\n        headers: await headers(),\n    })\n\n    if (!session) {\n        redirect(\"/login\")\n    }\n\n    if (session.user.role === \"PUBLISHER\") {\n        redirect(\"/admin/dashboard/library\")\n    }\n\n    if (session.user.role === \"ADMIN\") {\n        redirect(\"/admin/dashboard/users\")\n    }\n\n    redirect(\"/\")\n}"],"names":[],"mappings":";;;;AAAA;AACA;AAAA;AACA;AAAA;;;;;;;;;AAEe,eAAe;IAC1B,MAAM,UAAU,MAAM,2HAAI,CAAC,GAAG,CAAC,UAAU,CAAC;QACtC,SAAS,MAAM,IAAA,0IAAO;IAC1B;IAEA,IAAI,CAAC,SAAS;QACV,IAAA,iMAAQ,EAAC;IACb;IAEA,IAAI,QAAQ,IAAI,CAAC,IAAI,KAAK,aAAa;QACnC,IAAA,iMAAQ,EAAC;IACb;IAEA,IAAI,QAAQ,IAAI,CAAC,IAAI,KAAK,SAAS;QAC/B,IAAA,iMAAQ,EAAC;IACb;IAEA,IAAA,iMAAQ,EAAC;AACb"}}]
-}

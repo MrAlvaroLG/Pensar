@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 16, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/middleware.ts"],"sourcesContent":["import { NextResponse } from \"next/server\"\nimport type { NextRequest } from \"next/server\"\n\nexport async function middleware(request: NextRequest) {\n    const path = request.nextUrl.pathname\n    const isAdminRoute = path.startsWith(\"/admin\")\n\n    const hasSessionCookie = request.cookies.getAll().some(({ name }) =>\n        /^(?:__Secure-)?better-auth\\.session_token(?:\\.\\d+)?$/.test(name)\n    )\n\n    if (isAdminRoute && !hasSessionCookie) {\n        return NextResponse.redirect(new URL(\"/login\", request.url))\n    }\n\n    return NextResponse.next()\n}\n\nexport const config = {\n    matcher: [\n        \"/admin/:path*\",\n    ],\n}"],"names":[],"mappings":";;;;;;AAAA;AAAA;;AAGO,eAAe,WAAW,OAAoB;IACjD,MAAM,OAAO,QAAQ,OAAO,CAAC,QAAQ;IACrC,MAAM,eAAe,KAAK,UAAU,CAAC;IAErC,MAAM,mBAAmB,QAAQ,OAAO,CAAC,MAAM,GAAG,IAAI,CAAC,CAAC,EAAE,IAAI,EAAE,GAC5D,uDAAuD,IAAI,CAAC;IAGhE,IAAI,gBAAgB,CAAC,kBAAkB;QACnC,OAAO,gMAAY,CAAC,QAAQ,CAAC,IAAI,IAAI,UAAU,QAAQ,GAAG;IAC9D;IAEA,OAAO,gMAAY,CAAC,IAAI;AAC5B;AAEO,MAAM,SAAS;IAClB,SAAS;QACL;KACH;AACL"}}]
-}

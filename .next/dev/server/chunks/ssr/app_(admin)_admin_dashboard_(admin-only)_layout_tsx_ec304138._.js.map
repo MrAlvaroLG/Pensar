@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 6, "column": 0}, "map": {"version":3,"sources":["file:///home/alvarolg/Work/Pensar/app/%28admin%29/admin/dashboard/%28admin-only%29/layout.tsx"],"sourcesContent":["import { auth } from \"@/lib/auth\"\nimport { headers } from \"next/headers\"\nimport { redirect } from \"next/navigation\"\n\nexport default async function AdminOnlyLayout({ children }: { children: React.ReactNode }) {\n    const session = await auth.api.getSession({\n        headers: await headers(),\n    })\n\n    if (!session) {\n        redirect(\"/login\")\n    }\n\n    if (session.user.role !== \"ADMIN\") {\n        redirect(\"/\")\n    }\n\n    return children\n}\n"],"names":[],"mappings":";;;;AAAA;AAAA;AACA;AACA;AAAA;;;;;;;;;AAEe,eAAe,gBAAgB,EAAE,QAAQ,EAAiC;IACrF,MAAM,UAAU,MAAM,2HAAI,CAAC,GAAG,CAAC,UAAU,CAAC;QACtC,SAAS,MAAM,IAAA,0IAAO;IAC1B;IAEA,IAAI,CAAC,SAAS;QACV,IAAA,iMAAQ,EAAC;IACb;IAEA,IAAI,QAAQ,IAAI,CAAC,IAAI,KAAK,SAAS;QAC/B,IAAA,iMAAQ,EAAC;IACb;IAEA,OAAO;AACX"}}]
-}
