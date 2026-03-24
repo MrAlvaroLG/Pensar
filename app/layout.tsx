@@ -14,9 +14,42 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteDescription =
+  "Plataforma de debates mensuales";
+
+function getMetadataBase(): URL {
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return new URL(process.env.NEXT_PUBLIC_SITE_URL);
+  }
+  if (process.env.VERCEL_URL) {
+    return new URL(`https://${process.env.VERCEL_URL}`);
+  }
+  return new URL("http://localhost:3000");
+}
+
 export const metadata: Metadata = {
-  title: "Pensar - Plataforma de Debates",
-  description: "Plataforma de debates mensuales donde los usuarios eligen equipo y se inscriben a mociones.",
+  metadataBase: getMetadataBase(),
+  title: {
+    default: "Pensar - Plataforma de Debates",
+    template: "%s | Pensar",
+  },
+  description: siteDescription,
+  icons: {
+    icon: [{ url: "/logo/logo-negro.svg", type: "image/svg+xml" }],
+    shortcut: "/logo/logo-negro.svg",
+  },
+  openGraph: {
+    title: "Pensar - Plataforma de Debates",
+    description: siteDescription,
+    siteName: "Pensar",
+    locale: "es_ES",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Pensar - Plataforma de Debates",
+    description: siteDescription,
+  },
 };
 
 export default function RootLayout({
