@@ -34,6 +34,11 @@ import {
     InputOTPSeparator,
 } from "@/ui/input-otp"
 import { ArrowLeft } from "lucide-react"
+import {
+    E164_PHONE_INVALID_MESSAGE,
+    E164_PHONE_REGEX,
+    E164_PHONE_REQUIRED_MESSAGE,
+} from "@/lib/phone-e164"
 
 const RESEND_COOLDOWN = 60
 const isSignupOtpEnabled = process.env.NEXT_PUBLIC_AUTH_SIGNUP_OTP_ENABLED === "true"
@@ -48,6 +53,7 @@ export default function SignUpPage() {
     const [password, setPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
     const [postura, setPostura] = useState("")
+    const [phoneNumber, setPhoneNumber] = useState("")
     const [otp, setOtp] = useState("")
     const [countdown, setCountdown] = useState(0)
     const [error, setError] = useState<string | null>(null)
@@ -111,6 +117,16 @@ export default function SignUpPage() {
             return
         }
 
+        const normalizedPhoneNumber = phoneNumber.trim()
+        if (!normalizedPhoneNumber) {
+            setError(E164_PHONE_REQUIRED_MESSAGE)
+            return
+        }
+        if (!E164_PHONE_REGEX.test(normalizedPhoneNumber)) {
+            setError(E164_PHONE_INVALID_MESSAGE)
+            return
+        }
+
         setLoading(true)
 
         await authClient.signUp.email(
@@ -119,6 +135,7 @@ export default function SignUpPage() {
                 password,
                 name,
                 postura,
+                phoneNumber: normalizedPhoneNumber,
             } as Parameters<typeof authClient.signUp.email>[0],
             {
                 onSuccess: () => {
@@ -214,6 +231,26 @@ export default function SignUpPage() {
                                         </SelectGroup>
                                     </SelectContent>
                                 </Select>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="signup-phone">Teléfono</Label>
+                                <Input
+                                    value={phoneNumber}
+                                    onChange={(e) => setPhoneNumber(e.target.value)}
+                                    id="signup-phone"
+                                    type="tel"
+                                    placeholder="+5355555555"
+                                    inputMode="tel"
+                                    autoComplete="tel"
+                                    required
+                                    aria-invalid={
+                                        Boolean(phoneNumber.trim()) &&
+                                        !E164_PHONE_REGEX.test(phoneNumber.trim())
+                                    }
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Obligatorio. Formato E.164 (prefijo del país, ej. +53).
+                                </p>
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="signup-password">Contraseña</Label>

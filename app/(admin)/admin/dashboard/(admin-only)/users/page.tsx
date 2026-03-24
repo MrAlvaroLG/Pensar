@@ -132,7 +132,7 @@ function UsersSectionTable({
                         <TableHead>Nombre</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Postura</TableHead>
-                        <TableHead>Número</TableHead>
+                        <TableHead>Teléfono</TableHead>
                         <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -149,7 +149,7 @@ function UsersSectionTable({
                             <TableCell className="font-medium">{user.name}</TableCell>
                             <TableCell>{user.email}</TableCell>
                             <TableCell>{user.postura ?? "-"}</TableCell>
-                            <TableCell>{user.phoneNumber}</TableCell>
+                            <TableCell>{user.phoneNumber ?? "-"}</TableCell>
                             <TableCell className="text-right">
                                 <UserRowActions
                                     userId={user.id}

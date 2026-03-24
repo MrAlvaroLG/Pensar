@@ -23,6 +23,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/ui/select"
+import {
+    E164_PHONE_INVALID_MESSAGE,
+    E164_PHONE_REGEX,
+    E164_PHONE_REQUIRED_MESSAGE,
+} from "@/lib/phone-e164"
 
 interface ProfileDialogUser {
     name?: string | null
@@ -37,8 +42,6 @@ interface ProfileDialogProps {
     onOpenChange: (open: boolean) => void
     user: ProfileDialogUser
 }
-
-const E164_PHONE_REGEX = /^\+[1-9]\d{1,14}$/
 
 function getInitials(name: string): string {
     return name
@@ -103,8 +106,12 @@ export default function ProfileDialog({ open, onOpenChange, user }: ProfileDialo
             return
         }
 
-        if (normalizedPhoneNumber && !E164_PHONE_REGEX.test(normalizedPhoneNumber)) {
-            setSaveError("El numero telefonico debe usar formato E.164 (ej: +5355286169)")
+        if (!normalizedPhoneNumber) {
+            setSaveError(E164_PHONE_REQUIRED_MESSAGE)
+            return
+        }
+        if (!E164_PHONE_REGEX.test(normalizedPhoneNumber)) {
+            setSaveError(E164_PHONE_INVALID_MESSAGE)
             return
         }
 
@@ -125,7 +132,7 @@ export default function ProfileDialog({ open, onOpenChange, user }: ProfileDialo
                 name: displayName,
                 image: imageDataUrl,
                 postura,
-                phoneNumber: normalizedPhoneNumber || null,
+                phoneNumber: normalizedPhoneNumber,
             })
 
             setSaveSuccess("Perfil actualizado correctamente")
@@ -240,9 +247,10 @@ export default function ProfileDialog({ open, onOpenChange, user }: ProfileDialo
                                         setSaveError(null)
                                     }
                                 }}
-                                placeholder="+53********"
+                                placeholder="+5355555555"
                                 inputMode="tel"
                                 autoComplete="tel"
+                                required
                                 pattern="^\+[1-9]\d{1,14}$"
                                 aria-invalid={
                                     Boolean(phoneNumber.trim()) &&
