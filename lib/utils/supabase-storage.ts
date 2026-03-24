@@ -152,3 +152,7 @@ export async function deleteChatFolder(debateId: string): Promise<void> {
         }
     }
 }
+
+function getSupabaseAdmin() {
+    return getSupabaseService()
+}
