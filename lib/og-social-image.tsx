@@ -1,17 +1,25 @@
 import { ImageResponse } from "next/og";
 import { readFile } from "fs/promises";
 import { join } from "path";
+import sharp from "sharp";
 
 export const alt = "Pensar";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
+/** Satori (ImageResponse) only rasterizes PNG/JPEG/WebP/GIF — not SVG data URLs. */
 export async function generateSocialImage() {
-  const svg = await readFile(
+  const svgBuffer = await readFile(
     join(process.cwd(), "public/logo/logo-negro.svg"),
-    "utf8",
   );
-  const src = `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
+  const pngBuffer = await sharp(svgBuffer, { density: 300 })
+    .resize(420, 528, {
+      fit: "contain",
+      background: { r: 245, g: 240, b: 230, alpha: 1 },
+    })
+    .png()
+    .toBuffer();
+  const src = `data:image/png;base64,${pngBuffer.toString("base64")}`;
 
   return new ImageResponse(
     (
@@ -22,7 +30,7 @@ export async function generateSocialImage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#ffffff",
+          background: "#f5f0e6",
         }}
       >
         <img

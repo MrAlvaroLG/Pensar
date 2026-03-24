@@ -40,11 +40,20 @@ export const metadata: Metadata = {
     siteName: "Pensar",
     locale: "es_ES",
     type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Pensar",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Pensar - Plataforma de Debates",
     description: siteDescription,
+    images: ["/opengraph-image"],
   },
 };
 
