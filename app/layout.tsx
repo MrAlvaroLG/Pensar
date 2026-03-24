@@ -34,10 +34,6 @@ export const metadata: Metadata = {
     template: "%s | Pensar",
   },
   description: siteDescription,
-  icons: {
-    icon: [{ url: "/logo/logo-negro.svg", type: "image/svg+xml" }],
-    shortcut: "/logo/logo-negro.svg",
-  },
   openGraph: {
     title: "Pensar - Plataforma de Debates",
     description: siteDescription,
