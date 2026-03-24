@@ -24,7 +24,7 @@ import {
 import { AuthLink } from "@/components/auth/auth-link"
 import { PasswordInput } from "@/components/auth/password-input"
 import { PasswordStrength, validatePassword } from "@/components/auth/password-strength"
-import { ArrowLeft, Mail, ShieldCheck } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 
 const RESEND_COOLDOWN = 60
 const isPasswordResetOtpEnabled = process.env.NEXT_PUBLIC_AUTH_PASSWORD_RESET_OTP_ENABLED === "true"
@@ -178,9 +178,6 @@ export default function ForgotPasswordPage() {
                             height={50}
                             priority
                         />
-                        <div className="mb-1 flex size-11 items-center justify-center rounded-full bg-muted">
-                            <ShieldCheck className="size-5 text-muted-foreground" />
-                        </div>
                         <CardTitle>Verifica tu identidad</CardTitle>
                         <CardDescription>
                             Hemos enviado un código de 6 dígitos a{" "}

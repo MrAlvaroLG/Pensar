@@ -33,7 +33,7 @@ import {
     InputOTPSlot,
     InputOTPSeparator,
 } from "@/ui/input-otp"
-import { ArrowLeft, Mail, ShieldCheck } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 
 const RESEND_COOLDOWN = 60
 const isSignupOtpEnabled = process.env.NEXT_PUBLIC_AUTH_SIGNUP_OTP_ENABLED === "true"
