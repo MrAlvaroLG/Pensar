@@ -17,21 +17,6 @@ function getSupabaseService() {
     })
 }
 
-function getSupabasePublic() {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-    if (!url || !key) {
-        throw new Error(
-            "Faltan variables de entorno de Supabase (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)"
-        )
-    }
-
-    return createClient(url, key, {
-        auth: { persistSession: false },
-    })
-}
-
 export async function uploadPdf(file: File, path: string) {
     const supabase = getSupabaseService()
     const { data, error } = await supabase.storage
@@ -64,15 +49,6 @@ export async function deletePdf(path: string) {
     if (error) throw new Error(`Error al eliminar PDF: ${error.message}`)
 }
 
-export function getPublicUrl(path: string) {
-    const supabase = getSupabasePublic()
-    const { data } = supabase.storage
-        .from(LIBRARY_BUCKET)
-        .getPublicUrl(path)
-
-    return data.publicUrl
-}
-
 export async function uploadDebateDoc(file: File, path: string) {
     const supabase = getSupabaseService()
     const { data, error } = await supabase.storage
@@ -93,15 +69,6 @@ export async function deleteDebateDoc(path: string) {
         .remove([path])
 
     if (error) throw new Error(`Error al eliminar documento: ${error.message}`)
-}
-
-export function getDebateDocPublicUrl(path: string) {
-    const supabase = getSupabasePublic()
-    const { data } = supabase.storage
-        .from(DEBATE_DOCS_BUCKET)
-        .getPublicUrl(path)
-
-    return data.publicUrl
 }
 
 const CHAT_FILES_BUCKET = "chat-files"
