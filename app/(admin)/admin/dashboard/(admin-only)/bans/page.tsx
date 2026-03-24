@@ -1,14 +1,23 @@
-import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
-import prisma from "@/lib/db"
+import { redirect } from "next/navigation"
+import { and, asc, desc, eq, inArray } from "drizzle-orm"
+
 import { ensureAdminSession } from "@/lib/admin-auth"
+import { db } from "@/lib/db"
+import {
+    chatBan,
+    chatMessage,
+    chatReport,
+    debate,
+    debateRegistration,
+} from "@/lib/db/schema"
 import { BansClient } from "./bans-client"
 
 async function getHighlightedDebate() {
-    return prisma.debate.findFirst({
-        where: { status: { in: ["LIVE", "SCHEDULED"] } },
-        orderBy: { startAt: "asc" },
-        select: { id: true, title: true },
+    return db.query.debate.findFirst({
+        where: inArray(debate.status, ["LIVE", "SCHEDULED"]),
+        orderBy: [asc(debate.startAt)],
+        columns: { id: true, title: true },
     })
 }
 
@@ -81,9 +90,7 @@ export default async function BansPage() {
     const adminSession = await ensureAdminSession().catch(() => null)
     if (!adminSession) redirect("/login")
 
-    const debate = await getHighlightedDebate()
-
-    // ── Server Actions ──────────────────────────────────────────────────────────
+    const debateRow = await getHighlightedDebate()
 
     async function banUserAction(formData: FormData) {
         "use server"
@@ -102,11 +109,25 @@ export default async function BansPage() {
                 ? new Date(Date.now() + durationHours * 60 * 60 * 1000)
                 : null
 
-        await prisma.chatBan.upsert({
-            where: { userId_debateId: { userId, debateId } },
-            create: { userId, debateId, bannedBy: adminId, reason, expiresAt },
-            update: { bannedBy: adminId, reason, expiresAt },
-        })
+        await db
+            .insert(chatBan)
+            .values({
+                id: crypto.randomUUID(),
+                userId,
+                debateId,
+                bannedBy: adminId,
+                reason,
+                expiresAt,
+                createdAt: new Date(),
+            })
+            .onConflictDoUpdate({
+                target: [chatBan.userId, chatBan.debateId],
+                set: {
+                    bannedBy: adminId,
+                    reason,
+                    expiresAt,
+                },
+            })
 
         revalidatePath("/admin/dashboard/bans")
     }
@@ -120,9 +141,9 @@ export default async function BansPage() {
 
         if (!userId || !debateId) return
 
-        await prisma.chatBan.deleteMany({
-            where: { userId, debateId },
-        })
+        await db
+            .delete(chatBan)
+            .where(and(eq(chatBan.userId, userId), eq(chatBan.debateId, debateId)))
 
         revalidatePath("/admin/dashboard/bans")
     }
@@ -146,39 +167,40 @@ export default async function BansPage() {
                 durationHours > 0
                     ? new Date(Date.now() + durationHours * 60 * 60 * 1000)
                     : null
-            await prisma.chatBan.upsert({
-                where: { userId_debateId: { userId: authorId, debateId } },
-                create: {
+            await db
+                .insert(chatBan)
+                .values({
+                    id: crypto.randomUUID(),
                     userId: authorId,
                     debateId,
                     bannedBy: admin.user.id,
                     reason,
                     expiresAt,
-                },
-                update: {
-                    bannedBy: admin.user.id,
-                    reason,
-                    expiresAt,
-                },
-            })
-            // Soft-delete the reported message
-            await prisma.chatMessage.update({
-                where: { id: messageId },
-                data: { deleted: true, deletedAt: new Date() },
-            })
+                    createdAt: new Date(),
+                })
+                .onConflictDoUpdate({
+                    target: [chatBan.userId, chatBan.debateId],
+                    set: {
+                        bannedBy: admin.user.id,
+                        reason,
+                        expiresAt,
+                    },
+                })
+            await db
+                .update(chatMessage)
+                .set({ deleted: true, deletedAt: new Date(), updatedAt: new Date() })
+                .where(eq(chatMessage.id, messageId))
         }
 
-        await prisma.chatReport.update({
-            where: { id: reportId },
-            data: { status: action === "dismiss" ? "DISMISSED" : "REVIEWED" },
-        })
+        await db
+            .update(chatReport)
+            .set({ status: action === "dismiss" ? "DISMISSED" : "REVIEWED" })
+            .where(eq(chatReport.id, reportId))
 
         revalidatePath("/admin/dashboard/bans")
     }
 
-    // ── Data ───────────────────────────────────────────────────────────────────
-
-    if (!debate) {
+    if (!debateRow) {
         return (
             <div className="space-y-4">
                 <h1 className="text-xl font-semibold">Baneos y Reportes</h1>
@@ -189,35 +211,37 @@ export default async function BansPage() {
         )
     }
 
+    const debate = debateRow
+
     const [registrations, activeBans, reports]: [
         RegistrationQueryRow[],
         ActiveBanRow[],
         ReportQueryRow[]
     ] = await Promise.all([
-        prisma.debateRegistration.findMany({
-            where: {
-                debateId: debate.id,
-                team: { in: ["red", "blue"] },
+        db.query.debateRegistration.findMany({
+            where: and(
+                eq(debateRegistration.debateId, debate.id),
+                inArray(debateRegistration.team, ["red", "blue"])
+            ),
+            orderBy: [asc(debateRegistration.createdAt)],
+            with: {
+                user: { columns: { id: true, name: true, email: true } },
             },
-            include: {
-                user: { select: { id: true, name: true, email: true } },
-            },
-            orderBy: { createdAt: "asc" },
         }),
-        prisma.chatBan.findMany({
-            where: { debateId: debate.id },
+        db.query.chatBan.findMany({
+            where: eq(chatBan.debateId, debate.id),
         }),
-        prisma.chatReport.findMany({
-            where: { status: "PENDING" },
-            orderBy: { createdAt: "desc" },
-            take: 100,
-            include: {
+        db.query.chatReport.findMany({
+            where: eq(chatReport.status, "PENDING"),
+            orderBy: [desc(chatReport.createdAt)],
+            limit: 100,
+            with: {
                 message: {
-                    include: {
-                        user: { select: { id: true, name: true } },
+                    with: {
+                        user: { columns: { id: true, name: true } },
                     },
                 },
-                reporter: { select: { name: true } },
+                reporter: { columns: { name: true } },
             },
         }),
     ])

@@ -49,6 +49,18 @@ const fadeIn = (delay = 0) => ({
     transition: { duration: 0.5, delay, ease: "easeOut" as const },
 })
 
+function safeTransformLinkUri(uri: string) {
+    const trimmed = uri.trim()
+    const lower = trimmed.toLowerCase()
+
+    // Bloqueo de esquemas típicamente explotables en navegadores.
+    if (lower.startsWith("javascript:") || lower.startsWith("data:")) {
+        return null
+    }
+
+    return trimmed
+}
+
 export function ResumenClient({
     debateTitle,
     debateSubtitle,
@@ -113,7 +125,33 @@ export function ResumenClient({
                                 </div>
 
                                 <div className="prose prose-sm max-w-none dark:prose-invert prose-p:leading-relaxed">
-                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    <ReactMarkdown
+                                        remarkPlugins={[remarkGfm]}
+                                        skipHtml={true}
+                                        components={{
+                                            a({ href, ...props }) {
+                                                const safeHref =
+                                                    typeof href === "string" && href.trim().length > 0
+                                                        ? safeTransformLinkUri(href)
+                                                        : null
+
+                                                return (
+                                                    <a
+                                                        {...props}
+                                                        href={safeHref ?? "#"}
+                                                        rel="noopener noreferrer"
+                                                        target="_blank"
+                                                    />
+                                                )
+                                            },
+                                            img({ src, alt }) {
+                                                if (typeof src !== "string") return null
+                                                const safeSrc = safeTransformLinkUri(src)
+                                                if (!safeSrc) return null
+                                                return <img src={safeSrc} alt={alt ?? ""} />
+                                            },
+                                        }}
+                                    >
                                         {block.content}
                                     </ReactMarkdown>
                                 </div>

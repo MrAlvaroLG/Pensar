@@ -1,26 +1,28 @@
-import prisma from "@/lib/db"
+import { asc } from "drizzle-orm"
 
 import LibrarySectionClient from "@/components/sections/library-section-client"
+import { db } from "@/lib/db"
+import { libraryCategory, libraryDocument } from "@/lib/db/schema"
 
 export default async function LibrarySection() {
-    const categories = await prisma.libraryCategory.findMany({
-        include: {
+    const categories = await db.query.libraryCategory.findMany({
+        orderBy: [asc(libraryCategory.order)],
+        with: {
             documents: {
-                select: {
+                columns: {
                     id: true,
                     title: true,
                     description: true,
                 },
-                orderBy: { title: "asc" },
-            },
-            _count: {
-                select: {
-                    documents: true,
-                },
+                orderBy: [asc(libraryDocument.title)],
             },
         },
-        orderBy: { order: "asc" },
     })
 
-    return <LibrarySectionClient categories={categories} />
+    const categoriesWithCount = categories.map((c) => ({
+        ...c,
+        _count: { documents: c.documents.length },
+    }))
+
+    return <LibrarySectionClient categories={categoriesWithCount} />
 }

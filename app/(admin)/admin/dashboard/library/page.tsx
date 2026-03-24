@@ -1,6 +1,9 @@
-import prisma from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { and, asc, count, desc, eq, max, ne } from "drizzle-orm"
+
 import { ensureLibrarySession } from "@/lib/admin-auth"
+import { db } from "@/lib/db"
+import { libraryCategory, libraryDocument } from "@/lib/db/schema"
 import { deletePdf } from "@/lib/supabase-storage"
 import { LibraryClient } from "./library-client"
 
@@ -19,22 +22,22 @@ async function createCategoryAction(formData: FormData) {
         throw new Error("El nombre de la categoría es obligatorio")
     }
 
-    const existing = await prisma.libraryCategory.findUnique({
-        where: { name: name.trim() },
+    const existing = await db.query.libraryCategory.findFirst({
+        where: eq(libraryCategory.name, name.trim()),
     })
     if (existing) {
         throw new Error("Ya existe una categoría con ese nombre")
     }
 
-    const maxOrder = await prisma.libraryCategory.aggregate({
-        _max: { order: true },
-    })
+    const [agg] = await db.select({ v: max(libraryCategory.order) }).from(libraryCategory)
+    const now = new Date()
 
-    await prisma.libraryCategory.create({
-        data: {
-            name: name.trim(),
-            order: (maxOrder._max.order ?? -1) + 1,
-        },
+    await db.insert(libraryCategory).values({
+        id: crypto.randomUUID(),
+        name: name.trim(),
+        order: (agg?.v ?? -1) + 1,
+        createdAt: now,
+        updatedAt: now,
     })
 
     revalidateLibraryViews()
@@ -54,17 +57,20 @@ async function updateCategoryAction(formData: FormData) {
         throw new Error("El nombre de la categoría es obligatorio")
     }
 
-    const duplicate = await prisma.libraryCategory.findFirst({
-        where: { name: name.trim(), NOT: { id: categoryId } },
+    const duplicate = await db.query.libraryCategory.findFirst({
+        where: and(
+            eq(libraryCategory.name, name.trim()),
+            ne(libraryCategory.id, categoryId)
+        ),
     })
     if (duplicate) {
         throw new Error("Ya existe otra categoría con ese nombre")
     }
 
-    await prisma.libraryCategory.update({
-        where: { id: categoryId },
-        data: { name: name.trim() },
-    })
+    await db
+        .update(libraryCategory)
+        .set({ name: name.trim(), updatedAt: new Date() })
+        .where(eq(libraryCategory.id, categoryId))
 
     revalidateLibraryViews()
 }
@@ -78,16 +84,16 @@ async function deleteCategoryAction(formData: FormData) {
         throw new Error("ID de categoría inválido")
     }
 
-    const docCount = await prisma.libraryDocument.count({
-        where: { categoryId },
-    })
-    if (docCount > 0) {
+    const [row] = await db
+        .select({ n: count() })
+        .from(libraryDocument)
+        .where(eq(libraryDocument.categoryId, categoryId))
+
+    if (row && row.n > 0) {
         throw new Error("No se puede eliminar una categoría con documentos")
     }
 
-    await prisma.libraryCategory.delete({
-        where: { id: categoryId },
-    })
+    await db.delete(libraryCategory).where(eq(libraryCategory.id, categoryId))
 
     revalidateLibraryViews()
 }
@@ -101,8 +107,8 @@ async function deleteDocumentAction(formData: FormData) {
         throw new Error("ID de documento inválido")
     }
 
-    const doc = await prisma.libraryDocument.findUnique({
-        where: { id: documentId },
+    const doc = await db.query.libraryDocument.findFirst({
+        where: eq(libraryDocument.id, documentId),
     })
     if (!doc) {
         throw new Error("El documento no existe")
@@ -110,9 +116,7 @@ async function deleteDocumentAction(formData: FormData) {
 
     await deletePdf(doc.storagePath)
 
-    await prisma.libraryDocument.delete({
-        where: { id: documentId },
-    })
+    await db.delete(libraryDocument).where(eq(libraryDocument.id, documentId))
 
     revalidateLibraryViews()
 }
@@ -120,21 +124,23 @@ async function deleteDocumentAction(formData: FormData) {
 export default async function LibraryPage() {
     await ensureLibrarySession()
 
-    const categories = await prisma.libraryCategory.findMany({
-        include: { _count: { select: { documents: true } } },
-        orderBy: { order: "asc" },
+    const categoriesRaw = await db.query.libraryCategory.findMany({
+        orderBy: [asc(libraryCategory.order)],
+        with: {
+            documents: { columns: { id: true } },
+        },
     })
 
-    const documents = await prisma.libraryDocument.findMany({
-        orderBy: { createdAt: "desc" },
+    const documents = await db.query.libraryDocument.findMany({
+        orderBy: [desc(libraryDocument.createdAt)],
     })
 
-    const serializedCategories = categories.map((c) => ({
+    const serializedCategories = categoriesRaw.map((c) => ({
         id: c.id,
         name: c.name,
         icon: c.icon,
         order: c.order,
-        _count: c._count,
+        _count: { documents: c.documents.length },
     }))
 
     const serializedDocuments = documents.map((d) => ({

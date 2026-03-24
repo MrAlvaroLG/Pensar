@@ -1,9 +1,12 @@
-import prisma from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { and, eq } from "drizzle-orm"
+
 import { ensureAdminSession } from "@/lib/admin-auth"
-import { getFinishedDebates } from "@/lib/debates"
-import { deleteDebateDoc } from "@/lib/supabase-storage"
 import { DashboardHeader } from "@/components/admin/dashboard-header"
+import { getFinishedDebates } from "@/lib/debates"
+import { db } from "@/lib/db"
+import { debate } from "@/lib/db/schema"
+import { deleteDebateDoc } from "@/lib/supabase-storage"
 import { PastDebatesClient, type PastDebateRow } from "./past-debates-client"
 
 async function deleteDebateAction(formData: FormData) {
@@ -16,16 +19,16 @@ async function deleteDebateAction(formData: FormData) {
         throw new Error("Debate no encontrado")
     }
 
-    const debate = await prisma.debate.findFirst({
-        where: { id: debateId, status: "FINISHED" },
-        include: {
-            bibliographyDocs: { select: { storagePath: true } },
+    const row = await db.query.debate.findFirst({
+        where: and(eq(debate.id, debateId), eq(debate.status, "FINISHED")),
+        with: {
+            bibliographyDocs: { columns: { storagePath: true } },
         },
     })
 
-    if (!debate) throw new Error("Debate no encontrado")
+    if (!row) throw new Error("Debate no encontrado")
 
-    for (const doc of debate.bibliographyDocs) {
+    for (const doc of row.bibliographyDocs) {
         try {
             await deleteDebateDoc(doc.storagePath)
         } catch {
@@ -33,7 +36,7 @@ async function deleteDebateAction(formData: FormData) {
         }
     }
 
-    await prisma.debate.delete({ where: { id: debateId } })
+    await db.delete(debate).where(eq(debate.id, debateId))
 
     revalidatePath("/admin/dashboard/past-debates")
     revalidatePath("/debates")

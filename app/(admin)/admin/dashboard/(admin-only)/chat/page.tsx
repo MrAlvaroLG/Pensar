@@ -1,8 +1,11 @@
 import { redirect } from "next/navigation"
-import prisma from "@/lib/db"
+import { and, asc, eq } from "drizzle-orm"
+
 import { ensureAdminSession } from "@/lib/admin-auth"
-import { getHighlightedDebate } from "@/lib/debates"
 import { DashboardCard } from "@/components/admin/dashboard-card"
+import { getHighlightedDebate } from "@/lib/debates"
+import { db } from "@/lib/db"
+import { chatMessage } from "@/lib/db/schema"
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar"
 import { Badge } from "@/ui/badge"
 import { FileText, Music, Image as ImageIcon } from "lucide-react"
@@ -101,17 +104,25 @@ export default async function AdminChatPage() {
     }
 
     const [redMessages, blueMessages]: [ChatMessageRow[], ChatMessageRow[]] = await Promise.all([
-        prisma.chatMessage.findMany({
-            where: { debateId: debate.id, team: "red", deleted: false },
-            orderBy: { createdAt: "asc" },
-            take: 100,
-            include: { user: { select: { name: true, image: true } } },
+        db.query.chatMessage.findMany({
+            where: and(
+                eq(chatMessage.debateId, debate.id),
+                eq(chatMessage.team, "red"),
+                eq(chatMessage.deleted, false)
+            ),
+            orderBy: [asc(chatMessage.createdAt)],
+            limit: 100,
+            with: { user: { columns: { name: true, image: true } } },
         }),
-        prisma.chatMessage.findMany({
-            where: { debateId: debate.id, team: "blue", deleted: false },
-            orderBy: { createdAt: "asc" },
-            take: 100,
-            include: { user: { select: { name: true, image: true } } },
+        db.query.chatMessage.findMany({
+            where: and(
+                eq(chatMessage.debateId, debate.id),
+                eq(chatMessage.team, "blue"),
+                eq(chatMessage.deleted, false)
+            ),
+            orderBy: [asc(chatMessage.createdAt)],
+            limit: 100,
+            with: { user: { columns: { name: true, image: true } } },
         }),
     ])
 

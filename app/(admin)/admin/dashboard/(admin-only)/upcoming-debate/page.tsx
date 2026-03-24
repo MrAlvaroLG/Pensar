@@ -1,11 +1,14 @@
-import prisma from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { eq } from "drizzle-orm"
 import { headers } from "next/headers"
+
 import { auth } from "@/lib/auth"
-import { getDebateQueue, toDateTimeLocalValue } from "@/lib/debates"
-import { parseDateField, parseBibliography } from "@/lib/debate-form-helpers"
 import { DashboardHeader } from "@/components/admin/dashboard-header"
 import { DebateForm } from "@/components/admin/debate-form"
+import { parseBibliography, parseDateField } from "@/lib/debate-form-helpers"
+import { getDebateQueue, toDateTimeLocalValue } from "@/lib/debates"
+import { db } from "@/lib/db"
+import { debate, debateBibliography } from "@/lib/db/schema"
 
 async function saveUpcomingDebateAction(formData: FormData) {
     "use server"
@@ -18,7 +21,9 @@ async function saveUpcomingDebateAction(formData: FormData) {
         throw new Error("No autorizado")
     }
 
-    const upcomingId = formData.get("upcomingId")
+    const upcomingIdRaw = formData.get("upcomingId")
+    const upcomingId =
+        typeof upcomingIdRaw === "string" ? upcomingIdRaw.trim() : ""
     const title = formData.get("title")
     const subtitle = formData.get("subtitle")
     const question = formData.get("question")
@@ -45,36 +50,65 @@ async function saveUpcomingDebateAction(formData: FormData) {
     }
 
     const bibliography = parseBibliography(formData.get("bibliography"))
+    const now = new Date()
 
-    const sharedData = {
-        title: title.trim(),
-        subtitle: subtitle.trim(),
-        question: question.trim(),
-        thesis: thesis.trim(),
-        startAt,
-        endAt,
-        status: "SCHEDULED" as const,
-        bibliography: {
-            deleteMany: {},
-            create: bibliography,
-        },
-    }
+    if (upcomingId.length > 0) {
+        await db.transaction(async (tx) => {
+            await tx.delete(debateBibliography).where(eq(debateBibliography.debateId, upcomingId))
 
-    if (typeof upcomingId === "string" && upcomingId.length > 0) {
-        await prisma.debate.update({
-            where: {
-                id: upcomingId,
-            },
-            data: sharedData,
+            if (bibliography.length > 0) {
+                await tx.insert(debateBibliography).values(
+                    bibliography.map((b) => ({
+                        id: crypto.randomUUID(),
+                        debateId: upcomingId,
+                        label: b.label,
+                        url: b.url,
+                        createdAt: now,
+                    }))
+                )
+            }
+
+            await tx
+                .update(debate)
+                .set({
+                    title: title.trim(),
+                    subtitle: subtitle.trim(),
+                    question: question.trim(),
+                    thesis: thesis.trim(),
+                    startAt,
+                    endAt,
+                    status: "SCHEDULED",
+                    updatedAt: now,
+                })
+                .where(eq(debate.id, upcomingId))
         })
     } else {
-        await prisma.debate.create({
-            data: {
-                ...sharedData,
-                bibliography: {
-                    create: bibliography,
-                },
-            },
+        const newId = crypto.randomUUID()
+        await db.transaction(async (tx) => {
+            await tx.insert(debate).values({
+                id: newId,
+                title: title.trim(),
+                subtitle: subtitle.trim(),
+                question: question.trim(),
+                thesis: thesis.trim(),
+                startAt,
+                endAt,
+                status: "SCHEDULED",
+                createdAt: now,
+                updatedAt: now,
+            })
+
+            if (bibliography.length > 0) {
+                await tx.insert(debateBibliography).values(
+                    bibliography.map((b) => ({
+                        id: crypto.randomUUID(),
+                        debateId: newId,
+                        label: b.label,
+                        url: b.url,
+                        createdAt: now,
+                    }))
+                )
+            }
         })
     }
 

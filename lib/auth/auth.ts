@@ -1,8 +1,9 @@
+import { drizzleAdapter } from "@better-auth/drizzle-adapter"
 import { betterAuth } from "better-auth"
-import { prismaAdapter } from "@better-auth/prisma-adapter"
 import { emailOTP } from "better-auth/plugins"
 import { sendMail } from "@/lib/auth/smtp-mailer"
-import prisma from "@/lib/db"
+import { db } from "@/lib/db"
+import { schema } from "@/lib/db/schema"
 
 const signupOtpEnabled = process.env.NEXT_PUBLIC_AUTH_SIGNUP_OTP_ENABLED === "true"
 const passwordResetOtpEnabled = process.env.NEXT_PUBLIC_AUTH_PASSWORD_RESET_OTP_ENABLED === "true"
@@ -52,7 +53,8 @@ async function sendOtpEmail({ email, otp, type }: { email: string; otp: string; 
     const message = messageByType[type]
 
     if (!emailDeliveryEnabled) {
-        console.log(`[Auth][OTP:DEV] type=${type} email=${email} otp=${otp}`)
+        // Nunca loguear el OTP: puede filtrarse a logs centralizados / observabilidad.
+        console.log(`[Auth][OTP:DEV] type=${type} email=${email}`)
         return
     }
 
@@ -73,9 +75,14 @@ export const auth = betterAuth({
     trustedOrigins: [
         process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
     ],
-    database: prismaAdapter(prisma, {
-        provider: "postgresql",
+    database: drizzleAdapter(db, {
+        provider: "pg",
+        schema,
+        camelCase: true,
     }),
+    experimental: {
+        joins: true,
+    },
     emailAndPassword: {
         enabled: true,
         minPasswordLength: 8,

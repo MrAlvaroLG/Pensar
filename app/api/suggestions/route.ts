@@ -1,12 +1,34 @@
-import { NextResponse } from "next/server"
 import { headers } from "next/headers"
-import { Prisma } from "@prisma/client"
+import { NextResponse } from "next/server"
 
-import prisma from "@/lib/db"
 import { auth } from "@/lib/auth"
+import { db } from "@/lib/db"
+import { userSuggestion } from "@/lib/db/schema"
+import { checkRateLimit, getClientIp } from "@/lib/utils/rate-limit"
 
 export async function POST(request: Request) {
     const session = await auth.api.getSession({ headers: await headers() })
+
+    const ip = getClientIp(request)
+    const userId = session?.user?.id ?? "anon"
+    const rate = checkRateLimit({
+        key: `suggestions:${userId}:${ip}`,
+        windowMs: 60 * 60 * 1000,
+        limit: 5,
+    })
+
+    if (!rate.allowed) {
+        return NextResponse.json(
+            { error: "Demasiadas solicitudes. Intenta más tarde." },
+            {
+                status: 429,
+                headers:
+                    rate.retryAfterMs !== null
+                        ? { "Retry-After": String(Math.ceil(rate.retryAfterMs / 1000)) }
+                        : undefined,
+            }
+        )
+    }
 
     if (!session) {
         return NextResponse.json({ error: "No autenticado" }, { status: 401 })
@@ -31,13 +53,16 @@ export async function POST(request: Request) {
     }
 
     const suggestionId = crypto.randomUUID()
+    const now = new Date()
 
-    await prisma.$executeRaw(
-        Prisma.sql`
-            INSERT INTO "user_suggestion" ("id", "userId", "subject", "message", "createdAt", "updatedAt")
-            VALUES (${suggestionId}, ${session.user.id}, ${subject.slice(0, 120)}, ${message.slice(0, 1200)}, NOW(), NOW())
-        `
-    )
+    await db.insert(userSuggestion).values({
+        id: suggestionId,
+        userId: session.user.id,
+        subject: subject.slice(0, 120),
+        message: message.slice(0, 1200),
+        createdAt: now,
+        updatedAt: now,
+    })
 
     return NextResponse.json({ ok: true }, { status: 201 })
 }

@@ -8,9 +8,12 @@ import {
     TableRow,
 } from "@/ui/table"
 import { UserRowActions } from "@/components/admin/user-row-actions"
-import { ensureAdminSession } from "@/lib/admin-auth"
-import prisma from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { desc, eq } from "drizzle-orm"
+
+import { ensureAdminSession } from "@/lib/admin-auth"
+import { db } from "@/lib/db"
+import { user } from "@/lib/db/schema"
 
 interface UserRow {
     id: string
@@ -36,11 +39,7 @@ async function deleteUserAction(formData: FormData) {
         throw new Error("No puedes eliminar tu propia cuenta")
     }
 
-    await prisma.user.delete({
-        where: {
-            id: userId,
-        },
-    })
+    await db.delete(user).where(eq(user.id, userId))
 
     revalidatePath("/admin/dashboard/users")
 }
@@ -56,14 +55,10 @@ async function makeUserAdminAction(formData: FormData) {
         throw new Error("ID de usuario inválido")
     }
 
-    await prisma.user.update({
-        where: {
-            id: userId,
-        },
-        data: {
-            role: "ADMIN",
-        },
-    })
+    await db
+        .update(user)
+        .set({ role: "ADMIN", updatedAt: new Date() })
+        .where(eq(user.id, userId))
 
     revalidatePath("/admin/dashboard/users")
 }
@@ -79,14 +74,10 @@ async function makeUserPublisherAction(formData: FormData) {
         throw new Error("ID de usuario inválido")
     }
 
-    await prisma.user.update({
-        where: {
-            id: userId,
-        },
-        data: {
-            role: "PUBLISHER",
-        },
-    })
+    await db
+        .update(user)
+        .set({ role: "PUBLISHER", updatedAt: new Date() })
+        .where(eq(user.id, userId))
 
     revalidatePath("/admin/dashboard/users")
 }
@@ -106,14 +97,10 @@ async function makeUserStandardAction(formData: FormData) {
         throw new Error("No puedes quitarte el rol de administrador a ti mismo")
     }
 
-    await prisma.user.update({
-        where: {
-            id: userId,
-        },
-        data: {
-            role: "USER",
-        },
-    })
+    await db
+        .update(user)
+        .set({ role: "USER", updatedAt: new Date() })
+        .where(eq(user.id, userId))
 
     revalidatePath("/admin/dashboard/users")
 }
@@ -187,8 +174,8 @@ function UsersSectionTable({
 export default async function DashboardUsersPage() {
     const session = await ensureAdminSession()
 
-    const users = await prisma.user.findMany({
-        select: {
+    const users = await db.query.user.findMany({
+        columns: {
             id: true,
             name: true,
             email: true,
@@ -196,9 +183,7 @@ export default async function DashboardUsersPage() {
             phoneNumber: true,
             role: true,
         },
-        orderBy: {
-            createdAt: "desc",
-        },
+        orderBy: [desc(user.createdAt)],
     })
 
     const adminUsers: UserRow[] = users.filter((user) => user.role === "ADMIN")

@@ -1,19 +1,21 @@
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/ui/sidebar"
-import { Separator } from "@/ui/separator"
 import { AppSidebar } from "@/components/docs/app-sidebar"
-import prisma from "@/lib/db"
+import { db } from "@/lib/db"
+import { libraryCategory, libraryDocument } from "@/lib/db/schema"
+import { Separator } from "@/ui/separator"
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/ui/sidebar"
+import { asc } from "drizzle-orm"
 
 export const dynamic = "force-dynamic"
 
 export default async function DocsLayout({ children }: { children: React.ReactNode }) {
-    const categories = await prisma.libraryCategory.findMany({
-        include: {
+    const categories = await db.query.libraryCategory.findMany({
+        orderBy: [asc(libraryCategory.order)],
+        with: {
             documents: {
-                select: { id: true, title: true, description: true },
-                orderBy: { title: "asc" },
+                columns: { id: true, title: true, description: true },
+                orderBy: [asc(libraryDocument.title)],
             },
         },
-        orderBy: { order: "asc" },
     })
 
     return (

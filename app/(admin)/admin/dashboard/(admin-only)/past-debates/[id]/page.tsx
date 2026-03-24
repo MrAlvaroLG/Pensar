@@ -1,12 +1,25 @@
-import { notFound } from "next/navigation"
-import prisma from "@/lib/db"
 import { revalidatePath } from "next/cache"
-import { ensureAdminSession } from "@/lib/admin-auth"
-import { getFinishedDebateById } from "@/lib/debates"
-import { isSummaryBlockTeam, type SummaryBlockTeam } from "@/lib/debate-domain"
-import { uploadDebateDoc, deleteDebateDoc, getDebateDocPublicUrl } from "@/lib/supabase-storage"
+import { notFound } from "next/navigation"
+import { and, eq } from "drizzle-orm"
+
 import { DashboardHeader } from "@/components/admin/dashboard-header"
-import { PastDebateEditClient, type SummaryBlockData, type BibliographyLinkData, type BibliographyDocData } from "./past-debate-edit-client"
+import { ensureAdminSession } from "@/lib/admin-auth"
+import { isSummaryBlockTeam, type SummaryBlockTeam } from "@/lib/debate-domain"
+import { getFinishedDebateById } from "@/lib/debates"
+import { db } from "@/lib/db"
+import {
+    debate,
+    debateBibliography,
+    debateBibliographyDoc,
+    debateSummaryBlock,
+} from "@/lib/db/schema"
+import { deleteDebateDoc, getDebateDocPublicUrl, uploadDebateDoc } from "@/lib/supabase-storage"
+import {
+    PastDebateEditClient,
+    type SummaryBlockData,
+    type BibliographyLinkData,
+    type BibliographyDocData,
+} from "./past-debate-edit-client"
 
 async function saveSummaryBlocksAction(formData: FormData) {
     "use server"
@@ -18,11 +31,11 @@ async function saveSummaryBlocksAction(formData: FormData) {
         throw new Error("Debate no encontrado")
     }
 
-    const debate = await prisma.debate.findFirst({
-        where: { id: debateId, status: "FINISHED" },
-        select: { id: true },
+    const row = await db.query.debate.findFirst({
+        where: and(eq(debate.id, debateId), eq(debate.status, "FINISHED")),
+        columns: { id: true },
     })
-    if (!debate) throw new Error("Debate no encontrado")
+    if (!row) throw new Error("Debate no encontrado")
 
     const blocksRaw = formData.get("blocks")
     if (typeof blocksRaw !== "string") {
@@ -54,19 +67,23 @@ async function saveSummaryBlocksAction(formData: FormData) {
         }
     })
 
-    await prisma.$transaction([
-        prisma.debateSummaryBlock.deleteMany({ where: { debateId } }),
-        ...validated.map((b) =>
-            prisma.debateSummaryBlock.create({
-                data: {
+    const now = new Date()
+    await db.transaction(async (tx) => {
+        await tx.delete(debateSummaryBlock).where(eq(debateSummaryBlock.debateId, debateId))
+        if (validated.length > 0) {
+            await tx.insert(debateSummaryBlock).values(
+                validated.map((b) => ({
+                    id: crypto.randomUUID(),
                     debateId,
                     team: b.team,
                     content: b.content,
                     order: b.order,
-                },
-            })
-        ),
-    ])
+                    createdAt: now,
+                    updatedAt: now,
+                }))
+            )
+        }
+    })
 
     revalidatePath(`/admin/dashboard/past-debates/${debateId}`)
     revalidatePath(`/debates/${debateId}/resumen`)
@@ -84,11 +101,11 @@ async function saveBibliographyLinksAction(formData: FormData) {
         throw new Error("Debate no encontrado")
     }
 
-    const debate = await prisma.debate.findFirst({
-        where: { id: debateId, status: "FINISHED" },
-        select: { id: true },
+    const row = await db.query.debate.findFirst({
+        where: and(eq(debate.id, debateId), eq(debate.status, "FINISHED")),
+        columns: { id: true },
     })
-    if (!debate) throw new Error("Debate no encontrado")
+    if (!row) throw new Error("Debate no encontrado")
 
     const linksRaw = formData.get("links")
     if (typeof linksRaw !== "string") {
@@ -124,18 +141,21 @@ async function saveBibliographyLinksAction(formData: FormData) {
         }
     })
 
-    await prisma.$transaction([
-        prisma.debateBibliography.deleteMany({ where: { debateId } }),
-        ...validated.map((l) =>
-            prisma.debateBibliography.create({
-                data: {
+    const now = new Date()
+    await db.transaction(async (tx) => {
+        await tx.delete(debateBibliography).where(eq(debateBibliography.debateId, debateId))
+        if (validated.length > 0) {
+            await tx.insert(debateBibliography).values(
+                validated.map((l) => ({
+                    id: crypto.randomUUID(),
                     debateId,
                     label: l.label,
                     url: l.url,
-                },
-            })
-        ),
-    ])
+                    createdAt: now,
+                }))
+            )
+        }
+    })
 
     revalidatePath(`/admin/dashboard/past-debates/${debateId}`)
     revalidatePath(`/debates/${debateId}/bibliografia`)
@@ -153,11 +173,11 @@ async function uploadBibliographyDocAction(formData: FormData) {
         throw new Error("Debate no encontrado")
     }
 
-    const debate = await prisma.debate.findFirst({
-        where: { id: debateId, status: "FINISHED" },
-        select: { id: true },
+    const row = await db.query.debate.findFirst({
+        where: and(eq(debate.id, debateId), eq(debate.status, "FINISHED")),
+        columns: { id: true },
     })
-    if (!debate) throw new Error("Debate no encontrado")
+    if (!row) throw new Error("Debate no encontrado")
 
     const title = formData.get("title")
     if (typeof title !== "string" || title.trim().length === 0) {
@@ -185,14 +205,16 @@ async function uploadBibliographyDocAction(formData: FormData) {
     const storagePath = `${debateId}/${Date.now()}-${file.name}`
     await uploadDebateDoc(file, storagePath)
 
-    await prisma.debateBibliographyDoc.create({
-        data: {
-            debateId,
-            title: title.trim(),
-            description: descValue,
-            fileName: file.name,
-            storagePath,
-        },
+    const now = new Date()
+    await db.insert(debateBibliographyDoc).values({
+        id: crypto.randomUUID(),
+        debateId,
+        title: title.trim(),
+        description: descValue,
+        fileName: file.name,
+        storagePath,
+        createdAt: now,
+        updatedAt: now,
     })
 
     revalidatePath(`/admin/dashboard/past-debates/${debateId}`)
@@ -210,18 +232,16 @@ async function deleteBibliographyDocAction(formData: FormData) {
         throw new Error("Documento no encontrado")
     }
 
-    const doc = await prisma.debateBibliographyDoc.findUnique({
-        where: { id: docId },
-        select: { id: true, storagePath: true, debateId: true },
+    const doc = await db.query.debateBibliographyDoc.findFirst({
+        where: eq(debateBibliographyDoc.id, docId),
+        columns: { id: true, storagePath: true, debateId: true },
     })
 
     if (!doc) throw new Error("Documento no encontrado")
 
     await deleteDebateDoc(doc.storagePath)
 
-    await prisma.debateBibliographyDoc.delete({
-        where: { id: docId },
-    })
+    await db.delete(debateBibliographyDoc).where(eq(debateBibliographyDoc.id, docId))
 
     revalidatePath(`/admin/dashboard/past-debates/${doc.debateId}`)
     revalidatePath(`/debates/${doc.debateId}/bibliografia`)
@@ -234,25 +254,25 @@ export default async function PastDebateEditPage({
     params: Promise<{ id: string }>
 }) {
     const { id } = await params
-    const debate = await getFinishedDebateById(id)
+    const debateRow = await getFinishedDebateById(id)
 
-    if (!debate) {
+    if (!debateRow) {
         notFound()
     }
 
-    const summaryBlocks: SummaryBlockData[] = debate.summaryBlocks.map((b) => ({
+    const summaryBlocks: SummaryBlockData[] = debateRow.summaryBlocks.map((b) => ({
         id: b.id,
         team: b.team,
         content: b.content,
     }))
 
-    const bibliographyLinks: BibliographyLinkData[] = debate.bibliography.map((b) => ({
+    const bibliographyLinks: BibliographyLinkData[] = debateRow.bibliography.map((b) => ({
         id: b.id,
         label: b.label,
         url: b.url,
     }))
 
-    const bibliographyDocs: BibliographyDocData[] = debate.bibliographyDocs.map((d) => ({
+    const bibliographyDocs: BibliographyDocData[] = debateRow.bibliographyDocs.map((d) => ({
         id: d.id,
         title: d.title,
         description: d.description,
@@ -263,12 +283,12 @@ export default async function PastDebateEditPage({
     return (
         <section className="mx-auto w-full max-w-4xl space-y-6">
             <DashboardHeader
-                title={debate.title}
+                title={debateRow.title}
                 badge="Finalizado"
-                description={debate.subtitle}
+                description={debateRow.subtitle}
             />
             <PastDebateEditClient
-                debateId={debate.id}
+                debateId={debateRow.id}
                 initialBlocks={summaryBlocks}
                 bibliographyLinks={bibliographyLinks}
                 bibliographyDocs={bibliographyDocs}

@@ -1,7 +1,10 @@
-import { NextResponse } from "next/server"
 import { headers } from "next/headers"
+import { NextResponse } from "next/server"
+import { eq } from "drizzle-orm"
+
 import { auth } from "@/lib/auth"
-import prisma from "@/lib/db"
+import { db } from "@/lib/db"
+import { chatMessage } from "@/lib/db/schema"
 
 export async function DELETE(
     request: Request,
@@ -13,9 +16,9 @@ export async function DELETE(
     }
 
     const { id } = await params
-    const message = await prisma.chatMessage.findUnique({
-        where: { id },
-        select: { userId: true, deleted: true },
+    const message = await db.query.chatMessage.findFirst({
+        where: eq(chatMessage.id, id),
+        columns: { userId: true, deleted: true },
     })
 
     if (!message) {
@@ -33,10 +36,10 @@ export async function DELETE(
         )
     }
 
-    await prisma.chatMessage.update({
-        where: { id },
-        data: { deleted: true, deletedAt: new Date() },
-    })
+    await db
+        .update(chatMessage)
+        .set({ deleted: true, deletedAt: new Date(), updatedAt: new Date() })
+        .where(eq(chatMessage.id, id))
 
     return NextResponse.json({ ok: true })
 }

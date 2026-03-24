@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server"
-import prisma from "@/lib/db"
+import { eq } from "drizzle-orm"
+
 import { ensureLibrarySession } from "@/lib/admin-auth"
+import { db } from "@/lib/db"
+import { libraryCategory } from "@/lib/db/schema"
 import { createSignedUploadUrl } from "@/lib/supabase-storage"
 
 export async function POST(request: Request) {
@@ -17,9 +20,9 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "fileName requerido" }, { status: 400 })
         }
 
-        const category = await prisma.libraryCategory.findUnique({
-            where: { id: categoryId },
-            select: { id: true },
+        const category = await db.query.libraryCategory.findFirst({
+            where: eq(libraryCategory.id, categoryId),
+            columns: { id: true },
         })
         if (!category) {
             return NextResponse.json({ error: "La categoría no existe" }, { status: 404 })

@@ -1,34 +1,37 @@
-import { PrismaClient } from "@prisma/client"
-import { PrismaPg } from "@prisma/adapter-pg"
+import { drizzle } from "drizzle-orm/node-postgres"
 import pg from "pg"
+
+import { schema } from "./schema"
 
 function getDatabaseUrl() {
     const url = process.env.DATABASE_URL ?? process.env.DIRECT_URL
 
     if (typeof url !== "string" || url.trim().length === 0) {
         throw new Error(
-            "Missing database connection string. Set DATABASE_URL (or DIRECT_URL) in /home/alvarolg/Work/Pensar/.env.local"
+            "Missing database connection string. Set DATABASE_URL (or DIRECT_URL) in .env.local"
         )
     }
 
     return url.trim()
 }
 
-const prismaClientSingleton = () => {
+const poolSingleton = () => {
     const connectionString = getDatabaseUrl()
-    const pool = new pg.Pool({ connectionString })
-    const adapter = new PrismaPg(pool)
-    return new PrismaClient({ adapter })
+    return new pg.Pool({ connectionString })
 }
 
 declare global {
-    var prismaGlobal: undefined | ReturnType<typeof prismaClientSingleton>
+    var dbPoolGlobal: undefined | pg.Pool
 }
 
-const prisma = globalThis.prismaGlobal ?? prismaClientSingleton()
+const pool = globalThis.dbPoolGlobal ?? poolSingleton()
 
-export default prisma
+export const db = drizzle(pool, { schema })
 
-if (process.env.NODE_ENV !== "production") globalThis.prismaGlobal = prisma
+export default db
 
-export * from "@prisma/client"
+if (process.env.NODE_ENV !== "production") {
+    globalThis.dbPoolGlobal = pool
+}
+
+export * from "./schema"

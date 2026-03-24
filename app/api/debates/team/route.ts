@@ -1,9 +1,12 @@
+import { headers } from "next/headers"
+import { NextResponse } from "next/server"
+import { and, eq } from "drizzle-orm"
+
 import { auth } from "@/lib/auth"
 import { isDebateTeam } from "@/lib/debate-domain"
 import { getHighlightedDebate } from "@/lib/debates"
-import prisma from "@/lib/db"
-import { headers } from "next/headers"
-import { NextResponse } from "next/server"
+import { db } from "@/lib/db"
+import { debateRegistration } from "@/lib/db/schema"
 
 export async function POST(request: Request) {
     const session = await auth.api.getSession({
@@ -33,13 +36,11 @@ export async function POST(request: Request) {
         )
     }
 
-    const existingRegistration = await prisma.debateRegistration.findUnique({
-        where: {
-            userId_debateId: {
-                userId: session.user.id,
-                debateId: highlightedDebate.id,
-            },
-        },
+    const existingRegistration = await db.query.debateRegistration.findFirst({
+        where: and(
+            eq(debateRegistration.userId, session.user.id),
+            eq(debateRegistration.debateId, highlightedDebate.id)
+        ),
     })
 
     if (existingRegistration) {
@@ -53,18 +54,23 @@ export async function POST(request: Request) {
         )
     }
 
-    const registration = await prisma.debateRegistration.create({
-        data: {
+    const now = new Date()
+    const [registration] = await db
+        .insert(debateRegistration)
+        .values({
+            id: crypto.randomUUID(),
             userId: session.user.id,
             debateId: highlightedDebate.id,
             team,
-        },
-    })
+            createdAt: now,
+            updatedAt: now,
+        })
+        .returning()
 
     return NextResponse.json({
         success: true,
         team,
-        status: registration.status,
+        status: registration!.status,
         debateId: highlightedDebate.id,
     })
 }

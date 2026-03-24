@@ -32,7 +32,7 @@ import {
     Mic,
     Square,
 } from "lucide-react"
-import type { ChatFileType } from "@prisma/client"
+import type { ChatFileType } from "@/lib/db/schema"
 
 interface MessageUser {
     id: string

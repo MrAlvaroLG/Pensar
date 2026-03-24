@@ -1,15 +1,17 @@
 import Link from "next/link"
-import type { DebateStatus } from "@prisma/client"
-import prisma from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { eq } from "drizzle-orm"
 import { headers } from "next/headers"
+
 import { auth } from "@/lib/auth"
-import { getDebateQueue, toDateTimeLocalValue } from "@/lib/debates"
-import { parseDateField, parseBibliography } from "@/lib/debate-form-helpers"
-import { Button } from "@/ui/button"
 import { DashboardHeader } from "@/components/admin/dashboard-header"
 import { DebateForm } from "@/components/admin/debate-form"
-
+import { parseBibliography, parseDateField } from "@/lib/debate-form-helpers"
+import { getDebateQueue, toDateTimeLocalValue } from "@/lib/debates"
+import { db } from "@/lib/db"
+import type { DebateStatus } from "@/lib/db/schema"
+import { debate, debateBibliography } from "@/lib/db/schema"
+import { Button } from "@/ui/button"
 function parseDebateStatus(value: FormDataEntryValue | null): DebateStatus {
     if (typeof value !== "string") {
         throw new Error("Estado de debate inválido")
@@ -69,23 +71,36 @@ async function updateCurrentDebateAction(formData: FormData) {
     const bibliography = parseBibliography(formData.get("bibliography"))
     const status = parseDebateStatus(formData.get("status"))
 
-    await prisma.debate.update({
-        where: {
-            id: debateId,
-        },
-        data: {
-            title: title.trim(),
-            subtitle: subtitle.trim(),
-            question: question.trim(),
-            thesis: thesis.trim(),
-            startAt,
-            endAt,
-            status,
-            bibliography: {
-                deleteMany: {},
-                create: bibliography,
-            },
-        },
+    const now = new Date()
+
+    await db.transaction(async (tx) => {
+        await tx.delete(debateBibliography).where(eq(debateBibliography.debateId, debateId))
+
+        if (bibliography.length > 0) {
+            await tx.insert(debateBibliography).values(
+                bibliography.map((b) => ({
+                    id: crypto.randomUUID(),
+                    debateId,
+                    label: b.label,
+                    url: b.url,
+                    createdAt: now,
+                }))
+            )
+        }
+
+        await tx
+            .update(debate)
+            .set({
+                title: title.trim(),
+                subtitle: subtitle.trim(),
+                question: question.trim(),
+                thesis: thesis.trim(),
+                startAt,
+                endAt,
+                status,
+                updatedAt: now,
+            })
+            .where(eq(debate.id, debateId))
     })
 
     revalidatePath("/debates")

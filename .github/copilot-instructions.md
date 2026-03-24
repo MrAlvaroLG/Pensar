@@ -2,18 +2,17 @@
 
 ## Architecture
 
-Monorepo (npm workspaces + Turborepo) with one Next.js 16 app and three shared packages:
+Single Next.js 16 app at the repository root (not a published npm workspaces monorepo):
 
-- `apps/web` (@pensar/web) — Public app + admin panel (`/admin/dashboard`): landing, debates, docs, auth, admin. Port 3000.
-- `packages/db` (@pensar/db) — Prisma schema + client (not yet implemented).
-- `packages/ui` (@pensar/ui) — Shared components (`Button`, etc.). Simple `forwardRef` components.
-- `packages/lib` (@pensar/lib) — Shared utilities. Exports `cn` (simple class joiner, no `twMerge`).
+- **App** — Public site + admin panel (`/admin/dashboard`): landing, debates, library/docs, auth, admin. Port 3000 in dev.
+- **Database** — [`lib/db/schema.ts`](lib/db/schema.ts) (Drizzle ORM) + [`lib/db/index.ts`](lib/db/index.ts) exports `db` using a shared `pg` pool (singleton in development).
+- **Auth** — Better Auth with `@better-auth/drizzle-adapter`, PostgreSQL provider `pg`, `camelCase: true`, optional `experimental.joins`.
 
-Internal packages use `"*"` versions and are transpiled via `next.config.ts` → `transpilePackages: ["@pensar/ui", "@pensar/lib"]`.
+Path alias `@/*` maps to the project root (see `tsconfig.json`).
 
 ## Code Style
 
-- **TypeScript strict mode** everywhere. Path alias `@/*` → `./src/*` in both apps.
+- **TypeScript strict mode** everywhere.
 - **No semicolons** in source files (pages, components, utils). Config files may use them.
 - **4-space indentation** in components/pages; 2-space in JSON/config files.
 - **Double quotes** for strings and JSX attributes.
@@ -24,41 +23,39 @@ Internal packages use `"*"` versions and are transpiled via `next.config.ts` →
 
 ## UI & Styling
 
-- **Tailwind CSS v4** — uses `@import "tailwindcss"` (no `tailwind.config.js`). Colors via CSS variables in oklch.
-- **shadcn/ui (new-york style)** in `apps/web` — components live in `src/components/ui/`. The `cn` helper at `src/lib/utils.ts` uses `clsx` + `tailwind-merge`.
-- **`@pensar/ui`** has its own simpler components — the web app currently uses shadcn's versions locally via `@/components/ui/*`.
-- Animations: `framer-motion` with `motion.div` pattern.
+- **Tailwind CSS v4** — `@import "tailwindcss"`. Colors via CSS variables in oklch.
+- **shadcn/ui** — components under `@/components/ui/*` and `@/ui/*` as used in the repo.
 
 ## Build & Dev
 
 ```bash
-npm run dev          # Start all apps (turbo)
-npm run build        # Build all (turbo, respects dependsOn: ^build)
-npm run lint         # Lint all packages
+npm run dev              # Next.js dev server (port 3000)
+npm run build
+npm run lint
 
-# Database (from packages/db)
-npm run db:generate  # prisma generate
-npm run db:push      # prisma db push
-npm run db:studio    # prisma studio
+# Database (Drizzle)
+npm run db:generate      # drizzle-kit generate
+npm run db:push          # drizzle-kit push
+npm run db:migrate       # drizzle-kit migrate
+npm run db:studio        # drizzle-kit studio
+npm run db:seed:debates  # tsx lib/db/scripts/seed-debates.ts
 ```
 
-## Routing (apps/web)
+`drizzle.config.ts` loads `.env` / `.env.local`; exclude from `tsc` via `tsconfig.json`.
 
-Uses Next.js App Router with route groups:
-- `(main)/*` — Pages with `NavBar` (landing `/`, `/debates`, `/docs`)
-- `(auth)/*` — Auth pages with centered layout, no navbar (`/login`, `/signup`)
-- `(admin)/*` — Admin panel (`/admin/dashboard`), protected by middleware (`role === "ADMIN"`)
-- Static data colocated in `data.ts` alongside pages/components that consume it.
+## Routing
+
+Next.js App Router with route groups under `app/`: public routes, `(admin)/admin/dashboard`, auth pages, etc.
 
 ## Security Rules
 
 1. Never expose `SUPABASE_SERVICE_ROLE_KEY` in client code.
 2. All critical validation must be server-side (Server Actions or API routes).
 3. Admin routes must be protected by middleware (`role === "ADMIN"`).
-4. Prisma Client must use singleton pattern (see `packages/db`).
-5. Teams are strictly `RED` | `BLUE` — enforce at schema and validation level.
-6. One registration per user per debate (`@@unique([userId, debateId])`).
+4. Reuse the shared `db` / pool from `@/lib/db` — do not create new pools per request.
+5. Chat/debate teams for participants are `red` | `blue` (see schema enums).
+6. One registration per user per debate (unique on `userId` + `debateId` in `debate_registration`).
 
 ## Current Status
 
-The project is in **early scaffolding** — auth pages are visual mockups without logic. Prisma, NextAuth, and Supabase SDK are not yet installed. Keep this in mind when adding features: infrastructure (DB, auth, middleware) needs to be set up first.
+The app uses Drizzle + Better Auth + Supabase (Postgres + Storage). Keep server-side checks for admin and registration rules when changing data access.

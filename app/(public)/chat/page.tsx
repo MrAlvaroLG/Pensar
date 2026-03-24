@@ -1,18 +1,25 @@
-import { redirect } from "next/navigation"
 import { headers } from "next/headers"
+import { redirect } from "next/navigation"
+import { and, desc, eq } from "drizzle-orm"
+
 import { auth } from "@/lib/auth"
-import { getHighlightedDebate } from "@/lib/debates"
-import prisma from "@/lib/db"
 import { ChatClient } from "./chat-client"
-import type { ChatTeam } from "@prisma/client"
+import { getHighlightedDebate } from "@/lib/debates"
+import { db } from "@/lib/db"
+import type { ChatTeam } from "@/lib/db/schema"
+import { chatMessage, debateRegistration } from "@/lib/db/schema"
 
 async function getInitialMessages(debateId: string, team: ChatTeam) {
-    const messages = await prisma.chatMessage.findMany({
-        where: { debateId, team, deleted: false },
-        orderBy: { createdAt: "desc" },
-        take: 50,
-        include: {
-            user: { select: { id: true, name: true, image: true } },
+    const messages = await db.query.chatMessage.findMany({
+        where: and(
+            eq(chatMessage.debateId, debateId),
+            eq(chatMessage.team, team),
+            eq(chatMessage.deleted, false)
+        ),
+        orderBy: [desc(chatMessage.createdAt)],
+        limit: 50,
+        with: {
+            user: { columns: { id: true, name: true, image: true } },
         },
     })
     return messages.reverse()
@@ -38,14 +45,12 @@ export default async function ChatPage() {
         )
     }
 
-    const registration = await prisma.debateRegistration.findUnique({
-        where: {
-            userId_debateId: {
-                userId: session.user.id,
-                debateId: debate.id,
-            },
-        },
-        select: { team: true },
+    const registration = await db.query.debateRegistration.findFirst({
+        where: and(
+            eq(debateRegistration.userId, session.user.id),
+            eq(debateRegistration.debateId, debate.id)
+        ),
+        columns: { team: true },
     })
 
     const team = registration?.team

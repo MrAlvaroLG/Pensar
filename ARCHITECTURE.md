@@ -2,14 +2,12 @@
 
 ## 1️⃣ Tipo de proyecto
 
-Monorepo basado en:
+Single app basado en:
 
-* **npm workspaces**
-* **Turborepo**
-* **Next.js 14 (App Router)**
+* **Next.js 16 (App Router)**
 * **TypeScript**
 * **Tailwind CSS**
-* **Prisma + PostgreSQL (Supabase)**
+* **Drizzle ORM + PostgreSQL (Supabase)**
 * **BetterAuth para autenticación**
 * **Deploy en Vercel**
 
@@ -18,48 +16,28 @@ Monorepo basado en:
 # 🏗 Estructura del repositorio
 
 ```text
-pensar-monorepo/
+pensar/
 │
-├── apps/
-│   └── web/        → Aplicación pública + panel de administración (/admin/dashboard)
-│
-├── packages/
-│   ├── db/         → Prisma schema + Prisma Client
-│   ├── ui/         → Componentes reutilizables (botones, tablas, etc.)
-│   └── lib/        → Utilidades compartidas (auth helpers, supabase client)
-│
-├── package.json    → Configuración root con workspaces
-├── turbo.json      → Pipeline de build
-└── .env            → Variables de entorno
+├── app/            → Next.js App Router (público + /admin/dashboard)
+├── components/     → UI compartida
+├── lib/            → Utilidades, auth, DB
+│   └── db/         → Esquema Drizzle (`schema.ts`), migraciones, scripts
+├── drizzle.config.ts
+├── package.json
+└── .env / .env.local
 ```
 
 ---
 
 # ⚙️ Configuración de Workspaces
 
-En el `package.json` raíz:
-
-```json
-{
-  "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ]
-}
-```
-
-Esto permite:
-
-* Importar paquetes internos como `@pensar/db`
-* Compartir dependencias
-* Build paralelo con turbo
+No aplica: este repo es una sola aplicación (sin `npm workspaces` ni Turborepo).
 
 ---
 
 # 🧠 Arquitectura funcional
 
-## apps/web
+## app/
 
 Responsable de:
 
@@ -85,32 +63,20 @@ Framework:
 
 ---
 
-## packages/db
+## lib/db
 
 Contiene:
 
-* `prisma/schema.prisma`
-* Prisma Client exportado
-* Modelos:
+* [`lib/db/schema.ts`](lib/db/schema.ts) — tablas, enums y relaciones Drizzle
+* [`lib/db/index.ts`](lib/db/index.ts) — cliente `db` (pool `pg` singleton) y re-export del esquema
+* [`lib/db/migrations/`](lib/db/migrations/) — migraciones generadas con `drizzle-kit`
+* Modelos principales: `user`, `debate`, `debate_registration`, biblioteca, chat, etc.
 
-```text
-User
-Debate
-Registration
-Bibliografia
-```
-
-Regla crítica:
-
-```prisma
-@@unique([userId, debateId])
-```
-
-Esto evita doble inscripción.
+Regla crítica: restricción única compuesta `(userId, debateId)` en `debate_registration` para evitar doble inscripción.
 
 ---
 
-## packages/ui
+## ui/
 
 Contiene:
 
@@ -122,11 +88,11 @@ Contiene:
 
 Usado por:
 
-* apps/web
+* app/
 
 ---
 
-## packages/lib
+## lib/
 
 Contiene:
 
@@ -143,14 +109,14 @@ Contiene:
 Sistema:
 
 * BetterAuth
-* Adapter Prisma
+* Adapter Drizzle (`@better-auth/drizzle-adapter`)
 * Roles:
   * USER
   * ADMIN
 
 Protección:
 
-* Middleware en /dashboard (role = ADMIN)
+* Middleware en rutas `/admin/*` + validación por rol en layouts server-side
 * Server-side validation en inscripción
 
 ---
@@ -189,13 +155,9 @@ Sistema:
 Hosting:
 
 * Vercel
-* Proyecto → apps/web
+* Proyecto → app/
 
-Root directory en Vercel:
-
-```text
-apps/web
-```
+Root directory en Vercel: raíz del repositorio (donde está `package.json` de la app), salvo que uses un subdirectorio distinto en tu proyecto.
 
 ---
 
@@ -205,7 +167,7 @@ apps/web
 2. Toda validación crítica debe ser server-side.
 3. Nunca exponer SERVICE_ROLE_KEY en frontend.
 4. Middleware debe proteger rutas `/admin/dashboard` (role = ADMIN).
-5. Prisma solo debe inicializarse una vez (singleton pattern).
+5. El pool de Postgres / cliente Drizzle debe reutilizarse (singleton en desarrollo, ver `lib/db/index.ts`).
 6. Los equipos posibles son únicamente:
 
    * RED
@@ -231,12 +193,12 @@ No hay votación ni jueces.
 
 | Capa     | Tecnología             |
 | -------- | ---------------------- |
-| Frontend | Next.js 14             |
+| Frontend | Next.js 16             |
 | Estilos  | Tailwind               |
 | Backend  | Next.js Server Actions |
 | DB       | PostgreSQL (Supabase)  |
-| ORM      | Prisma                 |
+| ORM      | Drizzle                |
 | Auth     | BetterAuth             |
-| Monorepo | npm workspaces         |
-| Build    | Turborepo              |
+| Monorepo | No aplica (app única)  |
+| Build    | —                      |
 | Hosting  | Vercel                 |

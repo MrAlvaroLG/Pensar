@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation"
-import prisma from "@/lib/db"
-import { getPublicUrl } from "@/lib/supabase-storage"
+import { eq } from "drizzle-orm"
+
 import { PdfViewer } from "@/components/docs/pdf-viewer-client"
+import { db } from "@/lib/db"
+import { libraryDocument } from "@/lib/db/schema"
+import { getPublicUrl } from "@/lib/supabase-storage"
 
 interface DocPageProps {
     params: Promise<{ docId: string }>
@@ -10,8 +13,8 @@ interface DocPageProps {
 export default async function DocPage({ params }: DocPageProps) {
     const { docId } = await params
 
-    const doc = await prisma.libraryDocument.findUnique({
-        where: { id: docId },
+    const doc = await db.query.libraryDocument.findFirst({
+        where: eq(libraryDocument.id, docId),
     })
 
     if (!doc) {

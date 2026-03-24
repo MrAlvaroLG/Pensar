@@ -1,7 +1,16 @@
-import type { DebateStatus } from "@prisma/client"
-import prisma from "@/lib/db"
-import { unstable_noStore as noStore } from "next/cache"
+import { and, asc, desc, eq, gt, inArray, lte, or } from "drizzle-orm"
+
+import { db } from "@/lib/db"
+import type { DebateStatus } from "@/lib/db/schema"
+import {
+    debate,
+    debateBibliography,
+    debateBibliographyDoc,
+    debateRegistration,
+    debateSummaryBlock,
+} from "@/lib/db/schema"
 import { isDebateTeam, type DebateRegistrationStatus, type DebateTeam, type SummaryBlockTeam } from "@/lib/debate-domain"
+import { unstable_noStore as noStore } from "next/cache"
 
 export interface PublicDebate {
     id: string
@@ -54,21 +63,13 @@ const DATE_FORMATTER = new Intl.DateTimeFormat("es-ES", {
 
 async function getHighlightedDebateRecord() {
     const [liveDebate, scheduledDebate] = await Promise.all([
-        prisma.debate.findFirst({
-            where: {
-                status: "LIVE",
-            },
-            orderBy: {
-                startAt: "asc",
-            },
+        db.query.debate.findFirst({
+            where: eq(debate.status, "LIVE"),
+            orderBy: [asc(debate.startAt)],
         }),
-        prisma.debate.findFirst({
-            where: {
-                status: "SCHEDULED",
-            },
-            orderBy: {
-                startAt: "asc",
-            },
+        db.query.debate.findFirst({
+            where: eq(debate.status, "SCHEDULED"),
+            orderBy: [asc(debate.startAt)],
         }),
     ])
 
@@ -94,49 +95,31 @@ export async function getDebateQueue() {
 
     await syncDebateScheduleIfNeeded()
 
-    return prisma.debate.findMany({
-        where: {
-            status: {
-                in: ["LIVE", "SCHEDULED"],
-            },
-        },
-        include: {
+    return db.query.debate.findMany({
+        where: inArray(debate.status, ["LIVE", "SCHEDULED"]),
+        orderBy: [asc(debate.startAt)],
+        with: {
             bibliography: {
-                orderBy: {
-                    createdAt: "asc",
-                },
+                orderBy: [asc(debateBibliography.createdAt)],
             },
-        },
-        orderBy: {
-            startAt: "asc",
         },
     })
 }
 
 export async function syncDebateScheduleIfNeeded(now = new Date()) {
-    const pendingTransition = await prisma.debate.findFirst({
-        where: {
-            OR: [
-                {
-                    status: {
-                        in: ["LIVE", "SCHEDULED"],
-                    },
-                    endAt: {
-                        lte: now,
-                    },
-                },
-                {
-                    status: "SCHEDULED",
-                    startAt: {
-                        lte: now,
-                    },
-                    endAt: {
-                        gt: now,
-                    },
-                },
-            ],
-        },
-        select: {
+    const pendingTransition = await db.query.debate.findFirst({
+        where: or(
+            and(
+                inArray(debate.status, ["LIVE", "SCHEDULED"]),
+                lte(debate.endAt, now)
+            ),
+            and(
+                eq(debate.status, "SCHEDULED"),
+                lte(debate.startAt, now),
+                gt(debate.endAt, now)
+            )
+        ),
+        columns: {
             id: true,
         },
     })
@@ -165,14 +148,10 @@ export async function getPublicDebatesData() {
 
     const [highlightedDebate, pastDebates] = await Promise.all([
         getHighlightedDebateRecord(),
-        prisma.debate.findMany({
-            where: {
-                status: "FINISHED",
-            },
-            orderBy: {
-                endAt: "desc",
-            },
-            take: 6,
+        db.query.debate.findMany({
+            where: eq(debate.status, "FINISHED"),
+            orderBy: [desc(debate.endAt)],
+            limit: 6,
         }),
     ])
 
@@ -187,13 +166,13 @@ export async function getPublicDebatesData() {
                 dateLabel: formatDebateRange(highlightedDebate.startAt, highlightedDebate.endAt),
             }
             : null,
-        pastDebates: pastDebates.map((debate) => ({
-            id: debate.id,
-            title: debate.title,
-            subtitle: debate.subtitle,
-            question: debate.question,
-            quote: debate.thesis,
-            dateLabel: DATE_FORMATTER.format(debate.endAt),
+        pastDebates: pastDebates.map((row) => ({
+            id: row.id,
+            title: row.title,
+            subtitle: row.subtitle,
+            question: row.question,
+            quote: row.thesis,
+            dateLabel: DATE_FORMATTER.format(row.endAt),
         } satisfies PublicPastDebate)),
     }
 }
@@ -213,13 +192,11 @@ export async function getUserRegistrationForHighlightedDebate(userId: string): P
         return null
     }
 
-    const registration = await prisma.debateRegistration.findUnique({
-        where: {
-            userId_debateId: {
-                userId,
-                debateId: highlightedDebate.id,
-            },
-        },
+    const registration = await db.query.debateRegistration.findFirst({
+        where: and(
+            eq(debateRegistration.userId, userId),
+            eq(debateRegistration.debateId, highlightedDebate.id)
+        ),
     })
 
     if (!registration) {
@@ -239,62 +216,45 @@ export async function getUserRegistrationForHighlightedDebate(userId: string): P
 }
 
 export async function runDebateScheduleTransition(now = new Date()) {
-    return prisma.$transaction(async (tx) => {
-        const finished = await tx.debate.updateMany({
-            where: {
-                status: {
-                    in: ["LIVE", "SCHEDULED"],
-                },
-                endAt: {
-                    lte: now,
-                },
-            },
-            data: {
-                status: "FINISHED",
-            },
-        })
+    return db.transaction(async (tx) => {
+        const finishedRows = await tx
+            .update(debate)
+            .set({ status: "FINISHED", updatedAt: new Date() })
+            .where(
+                and(
+                    inArray(debate.status, ["LIVE", "SCHEDULED"]),
+                    lte(debate.endAt, now)
+                )
+            )
+            .returning({ id: debate.id })
 
-        await tx.debate.updateMany({
-            where: {
-                status: "LIVE",
-            },
-            data: {
-                status: "SCHEDULED",
-            },
-        })
+        await tx
+            .update(debate)
+            .set({ status: "SCHEDULED", updatedAt: new Date() })
+            .where(eq(debate.status, "LIVE"))
 
-        const toPromote = await tx.debate.findFirst({
-            where: {
-                status: "SCHEDULED",
-                startAt: {
-                    lte: now,
-                },
-                endAt: {
-                    gt: now,
-                },
-            },
-            orderBy: {
-                startAt: "asc",
-            },
+        const toPromote = await tx.query.debate.findFirst({
+            where: and(
+                eq(debate.status, "SCHEDULED"),
+                lte(debate.startAt, now),
+                gt(debate.endAt, now)
+            ),
+            orderBy: [asc(debate.startAt)],
         })
 
         let promotedId: string | null = null
 
         if (toPromote) {
-            await tx.debate.update({
-                where: {
-                    id: toPromote.id,
-                },
-                data: {
-                    status: "LIVE",
-                },
-            })
+            await tx
+                .update(debate)
+                .set({ status: "LIVE", updatedAt: new Date() })
+                .where(eq(debate.id, toPromote.id))
             promotedId = toPromote.id
         }
 
         return {
             now: now.toISOString(),
-            finishedCount: finished.count,
+            finishedCount: finishedRows.length,
             promotedId,
         }
     })
@@ -310,48 +270,40 @@ export const DEBATE_STATUS_OPTIONS: Array<{ value: DebateStatus; label: string }
 export async function getFinishedDebates() {
     noStore()
 
-    return prisma.debate.findMany({
-        where: {
-            status: "FINISHED",
-        },
-        include: {
-            _count: {
-                select: {
-                    summaryBlocks: true,
-                    bibliographyDocs: true,
-                    bibliography: true,
-                },
-            },
-        },
-        orderBy: {
-            endAt: "desc",
+    const rows = await db.query.debate.findMany({
+        where: eq(debate.status, "FINISHED"),
+        orderBy: [desc(debate.endAt)],
+        with: {
+            summaryBlocks: { columns: { id: true } },
+            bibliographyDocs: { columns: { id: true } },
+            bibliography: { columns: { id: true } },
         },
     })
+
+    return rows.map((row) => ({
+        ...row,
+        _count: {
+            summaryBlocks: row.summaryBlocks.length,
+            bibliographyDocs: row.bibliographyDocs.length,
+            bibliography: row.bibliography.length,
+        },
+    }))
 }
 
 export async function getFinishedDebateById(id: string) {
     noStore()
 
-    return prisma.debate.findFirst({
-        where: {
-            id,
-            status: "FINISHED",
-        },
-        include: {
+    return db.query.debate.findFirst({
+        where: and(eq(debate.id, id), eq(debate.status, "FINISHED")),
+        with: {
             summaryBlocks: {
-                orderBy: {
-                    order: "asc",
-                },
+                orderBy: [asc(debateSummaryBlock.order)],
             },
             bibliography: {
-                orderBy: {
-                    createdAt: "asc",
-                },
+                orderBy: [asc(debateBibliography.createdAt)],
             },
             bibliographyDocs: {
-                orderBy: {
-                    createdAt: "asc",
-                },
+                orderBy: [asc(debateBibliographyDoc.createdAt)],
             },
         },
     })
@@ -362,21 +314,17 @@ export async function getAllPastDebatesForArchive() {
 
     await syncDebateScheduleIfNeeded()
 
-    const debates = await prisma.debate.findMany({
-        where: {
-            status: "FINISHED",
-        },
-        orderBy: {
-            endAt: "desc",
-        },
+    const debates = await db.query.debate.findMany({
+        where: eq(debate.status, "FINISHED"),
+        orderBy: [desc(debate.endAt)],
     })
 
-    return debates.map((debate) => ({
-        id: debate.id,
-        title: debate.title,
-        subtitle: debate.subtitle,
-        question: debate.question,
-        quote: debate.thesis,
-        dateLabel: DATE_FORMATTER.format(debate.endAt),
+    return debates.map((row) => ({
+        id: row.id,
+        title: row.title,
+        subtitle: row.subtitle,
+        question: row.question,
+        quote: row.thesis,
+        dateLabel: DATE_FORMATTER.format(row.endAt),
     } satisfies PublicPastDebate))
 }

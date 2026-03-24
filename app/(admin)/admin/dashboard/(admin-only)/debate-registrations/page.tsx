@@ -1,16 +1,19 @@
-import prisma from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { and, asc, count, eq, inArray, ne } from "drizzle-orm"
+
 import { ensureAdminSession } from "@/lib/admin-auth"
+import { DashboardHeader } from "@/components/admin/dashboard-header"
 import {
     isDebateRegistrationStatus,
     isDebateTeam,
 } from "@/lib/debate-domain"
 import { getHighlightedDebate } from "@/lib/debates"
+import { db } from "@/lib/db"
+import { debateRegistration } from "@/lib/db/schema"
 import {
     RegistrationsClient,
     type RegistrationRow,
 } from "./registrations-client"
-import { DashboardHeader } from "@/components/admin/dashboard-header"
 
 async function updateRegistrationTeamAction(formData: FormData) {
     "use server"
@@ -28,25 +31,22 @@ async function updateRegistrationTeamAction(formData: FormData) {
         throw new Error("Equipo inválido")
     }
 
-    const current = await prisma.debateRegistration.findUnique({
-        where: {
-            id: registrationId,
-        },
+    const current = await db.query.debateRegistration.findFirst({
+        where: eq(debateRegistration.id, registrationId),
     })
 
     if (!current) {
         throw new Error("Registro no encontrado")
     }
 
-    await prisma.debateRegistration.update({
-        where: {
-            id: registrationId,
-        },
-        data: {
+    await db
+        .update(debateRegistration)
+        .set({
             team: nextTeam,
             status: nextTeam === "public" ? "participant" : current.status,
-        },
-    })
+            updatedAt: new Date(),
+        })
+        .where(eq(debateRegistration.id, registrationId))
 
     revalidatePath("/admin/dashboard/debate-registrations")
     revalidatePath("/debates")
@@ -68,10 +68,8 @@ async function updateRegistrationStatusAction(formData: FormData) {
         throw new Error("Estado inválido")
     }
 
-    const registration = await prisma.debateRegistration.findUnique({
-        where: {
-            id: registrationId,
-        },
+    const registration = await db.query.debateRegistration.findFirst({
+        where: eq(debateRegistration.id, registrationId),
     })
 
     if (!registration) {
@@ -85,16 +83,19 @@ async function updateRegistrationStatusAction(formData: FormData) {
     if (nextStatus === "orator" || nextStatus === "reserve") {
         const maxAllowed = nextStatus === "orator" ? 3 : 2
 
-        const sameRoleCount = await prisma.debateRegistration.count({
-            where: {
-                debateId: registration.debateId,
-                team: registration.team,
-                status: nextStatus,
-                id: {
-                    not: registration.id,
-                },
-            },
-        })
+        const [row] = await db
+            .select({ n: count() })
+            .from(debateRegistration)
+            .where(
+                and(
+                    eq(debateRegistration.debateId, registration.debateId),
+                    eq(debateRegistration.team, registration.team),
+                    eq(debateRegistration.status, nextStatus),
+                    ne(debateRegistration.id, registration.id)
+                )
+            )
+
+        const sameRoleCount = row?.n ?? 0
 
         if (sameRoleCount >= maxAllowed) {
             throw new Error(
@@ -105,14 +106,10 @@ async function updateRegistrationStatusAction(formData: FormData) {
         }
     }
 
-    await prisma.debateRegistration.update({
-        where: {
-            id: registration.id,
-        },
-        data: {
-            status: nextStatus,
-        },
-    })
+    await db
+        .update(debateRegistration)
+        .set({ status: nextStatus, updatedAt: new Date() })
+        .where(eq(debateRegistration.id, registration.id))
 
     revalidatePath("/admin/dashboard/debate-registrations")
     revalidatePath("/debates")
@@ -129,17 +126,15 @@ async function deleteRegistrationAction(formData: FormData) {
         throw new Error("Registro inválido")
     }
 
-    const registration = await prisma.debateRegistration.findUnique({
-        where: { id: registrationId },
+    const registration = await db.query.debateRegistration.findFirst({
+        where: eq(debateRegistration.id, registrationId),
     })
 
     if (!registration) {
         throw new Error("Registro no encontrado")
     }
 
-    await prisma.debateRegistration.delete({
-        where: { id: registrationId },
-    })
+    await db.delete(debateRegistration).where(eq(debateRegistration.id, registrationId))
 
     revalidatePath("/admin/dashboard/debate-registrations")
     revalidatePath("/debates")
@@ -157,16 +152,15 @@ export default async function DebateRegistrationsPage() {
         )
     }
 
-    const registrations = await prisma.debateRegistration.findMany({
-        where: {
-            debateId: highlightedDebate.id,
-            team: {
-                in: ["red", "blue", "public"],
-            },
-        },
-        include: {
+    const registrations = await db.query.debateRegistration.findMany({
+        where: and(
+            eq(debateRegistration.debateId, highlightedDebate.id),
+            inArray(debateRegistration.team, ["red", "blue", "public"])
+        ),
+        orderBy: [asc(debateRegistration.createdAt)],
+        with: {
             user: {
-                select: {
+                columns: {
                     name: true,
                     email: true,
                     phoneNumber: true,
@@ -174,16 +168,12 @@ export default async function DebateRegistrationsPage() {
                 },
             },
         },
-        orderBy: [
-            {
-                createdAt: "asc",
-            },
-            {
-                user: {
-                    name: "asc",
-                },
-            },
-        ],
+    })
+
+    registrations.sort((a, b) => {
+        const byDate = a.createdAt.getTime() - b.createdAt.getTime()
+        if (byDate !== 0) return byDate
+        return a.user.name.localeCompare(b.user.name)
     })
 
     const rows: RegistrationRow[] = registrations.map((r) => ({

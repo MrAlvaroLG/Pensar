@@ -8,6 +8,8 @@ out/
 # build
 dist/
 build/
+.tsbuildinfo/
+*.tsbuildinfo
 
 # env
 .env

@@ -1,8 +1,9 @@
 import { revalidatePath } from "next/cache"
-import prisma from "@/lib/db"
-import { Prisma } from "@prisma/client"
+import { desc, eq } from "drizzle-orm"
 
 import { ensureAdminSession } from "@/lib/admin-auth"
+import { db } from "@/lib/db"
+import { user, userSuggestion } from "@/lib/db/schema"
 import { Button } from "@/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card"
 
@@ -16,9 +17,7 @@ async function deleteSuggestionAction(formData: FormData) {
         throw new Error("ID de sugerencia invalido")
     }
 
-    await prisma.$executeRaw(
-        Prisma.sql`DELETE FROM "user_suggestion" WHERE "id" = ${suggestionId}`
-    )
+    await db.delete(userSuggestion).where(eq(userSuggestion.id, suggestionId))
 
     revalidatePath("/admin/dashboard/suggestions")
 }
@@ -26,28 +25,19 @@ async function deleteSuggestionAction(formData: FormData) {
 export default async function DashboardSuggestionsPage() {
     await ensureAdminSession()
 
-    const suggestions = await prisma.$queryRaw<
-        Array<{
-            id: string
-            subject: string
-            message: string
-            createdAt: Date
-            userName: string
-            userEmail: string
-        }>
-    >(Prisma.sql`
-        SELECT
-            s."id",
-            s."subject",
-            s."message",
-            s."createdAt",
-            u."name" AS "userName",
-            u."email" AS "userEmail"
-        FROM "user_suggestion" s
-        INNER JOIN "user" u ON u."id" = s."userId"
-        ORDER BY s."createdAt" DESC
-        LIMIT 200
-    `)
+    const suggestions = await db
+        .select({
+            id: userSuggestion.id,
+            subject: userSuggestion.subject,
+            message: userSuggestion.message,
+            createdAt: userSuggestion.createdAt,
+            userName: user.name,
+            userEmail: user.email,
+        })
+        .from(userSuggestion)
+        .innerJoin(user, eq(userSuggestion.userId, user.id))
+        .orderBy(desc(userSuggestion.createdAt))
+        .limit(200)
 
     return (
         <section className="space-y-4">

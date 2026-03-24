@@ -1,7 +1,10 @@
+import { desc, eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { NextResponse } from "next/server"
+
 import { runDebateScheduleTransition } from "@/lib/debates"
-import prisma from "@/lib/db"
+import { db } from "@/lib/db"
+import { chatBan, chatMessage, debate } from "@/lib/db/schema"
 import { deleteChatFolder } from "@/lib/supabase-storage"
 
 export const runtime = "nodejs"
@@ -31,20 +34,18 @@ async function handleCron(request: Request) {
 
     // Clean up chat data for debates that just finished
     if (result.finishedCount > 0) {
-        const finishedDebates = await prisma.debate.findMany({
-            where: { status: "FINISHED" },
-            select: { id: true },
-            orderBy: { endAt: "desc" },
-            take: result.finishedCount,
+        const finishedDebates = await db.query.debate.findMany({
+            where: eq(debate.status, "FINISHED"),
+            columns: { id: true },
+            orderBy: [desc(debate.endAt)],
+            limit: result.finishedCount,
         })
 
         await Promise.allSettled(
-            finishedDebates.map(async (debate) => {
-                // Hard delete chat messages and bans (reports cascade via FK)
-                await prisma.chatMessage.deleteMany({ where: { debateId: debate.id } })
-                await prisma.chatBan.deleteMany({ where: { debateId: debate.id } })
-                // Remove files from Supabase Storage
-                await deleteChatFolder(debate.id)
+            finishedDebates.map(async (row) => {
+                await db.delete(chatMessage).where(eq(chatMessage.debateId, row.id))
+                await db.delete(chatBan).where(eq(chatBan.debateId, row.id))
+                await deleteChatFolder(row.id)
             })
         )
     }

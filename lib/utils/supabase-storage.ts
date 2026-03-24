@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js"
 const LIBRARY_BUCKET = "library-pdfs"
 const DEBATE_DOCS_BUCKET = "debate-docs"
 
-function getSupabaseAdmin() {
+function getSupabaseService() {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -17,8 +17,23 @@ function getSupabaseAdmin() {
     })
 }
 
+function getSupabasePublic() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    if (!url || !key) {
+        throw new Error(
+            "Faltan variables de entorno de Supabase (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)"
+        )
+    }
+
+    return createClient(url, key, {
+        auth: { persistSession: false },
+    })
+}
+
 export async function uploadPdf(file: File, path: string) {
-    const supabase = getSupabaseAdmin()
+    const supabase = getSupabaseService()
     const { data, error } = await supabase.storage
         .from(LIBRARY_BUCKET)
         .upload(path, file, {
@@ -31,7 +46,7 @@ export async function uploadPdf(file: File, path: string) {
 }
 
 export async function createSignedUploadUrl(storagePath: string) {
-    const supabase = getSupabaseAdmin()
+    const supabase = getSupabaseService()
     const { data, error } = await supabase.storage
         .from(LIBRARY_BUCKET)
         .createSignedUploadUrl(storagePath)
@@ -41,7 +56,7 @@ export async function createSignedUploadUrl(storagePath: string) {
 }
 
 export async function deletePdf(path: string) {
-    const supabase = getSupabaseAdmin()
+    const supabase = getSupabaseService()
     const { error } = await supabase.storage
         .from(LIBRARY_BUCKET)
         .remove([path])
@@ -50,7 +65,7 @@ export async function deletePdf(path: string) {
 }
 
 export function getPublicUrl(path: string) {
-    const supabase = getSupabaseAdmin()
+    const supabase = getSupabasePublic()
     const { data } = supabase.storage
         .from(LIBRARY_BUCKET)
         .getPublicUrl(path)
@@ -59,7 +74,7 @@ export function getPublicUrl(path: string) {
 }
 
 export async function uploadDebateDoc(file: File, path: string) {
-    const supabase = getSupabaseAdmin()
+    const supabase = getSupabaseService()
     const { data, error } = await supabase.storage
         .from(DEBATE_DOCS_BUCKET)
         .upload(path, file, {
@@ -72,7 +87,7 @@ export async function uploadDebateDoc(file: File, path: string) {
 }
 
 export async function deleteDebateDoc(path: string) {
-    const supabase = getSupabaseAdmin()
+    const supabase = getSupabaseService()
     const { error } = await supabase.storage
         .from(DEBATE_DOCS_BUCKET)
         .remove([path])
@@ -81,7 +96,7 @@ export async function deleteDebateDoc(path: string) {
 }
 
 export function getDebateDocPublicUrl(path: string) {
-    const supabase = getSupabaseAdmin()
+    const supabase = getSupabasePublic()
     const { data } = supabase.storage
         .from(DEBATE_DOCS_BUCKET)
         .getPublicUrl(path)
@@ -97,7 +112,7 @@ export async function uploadChatFile(
     team: string,
     fileId: string,
 ): Promise<string> {
-    const supabase = getSupabaseAdmin()
+    const supabase = getSupabaseService()
     const ext = file.name.split(".").pop() ?? "bin"
     const path = `${debateId}/${team}/${fileId}.${ext}`
     const { error } = await supabase.storage
@@ -109,7 +124,7 @@ export async function uploadChatFile(
 }
 
 export async function getChatFileSignedUrl(path: string): Promise<string> {
-    const supabase = getSupabaseAdmin()
+    const supabase = getSupabaseService()
     const { data, error } = await supabase.storage
         .from(CHAT_FILES_BUCKET)
         .createSignedUrl(path, 60 * 60 * 24) // 24h

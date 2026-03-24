@@ -1,7 +1,10 @@
-import { NextResponse } from "next/server"
-import prisma from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { NextResponse } from "next/server"
+import { eq } from "drizzle-orm"
+
 import { ensureLibrarySession } from "@/lib/admin-auth"
+import { db } from "@/lib/db"
+import { libraryCategory, libraryDocument } from "@/lib/db/schema"
 
 /**
  * Registers a document in the database after the file has been uploaded
@@ -33,35 +36,48 @@ export async function POST(request: Request) {
         if (typeof storagePath !== "string" || !storagePath) {
             return NextResponse.json({ error: "storagePath requerido" }, { status: 400 })
         }
-        // Prevent storagePath tampering: must be scoped to the declared category
-        if (!storagePath.startsWith(`${categoryId}/`)) {
+
+        const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+        const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_")
+        const storagePathNormalized = storagePath.trim()
+        const expectedPattern = new RegExp(
+            `^${escapeRegex(categoryId)}/\\\\d+-${escapeRegex(safeName)}$`
+        )
+
+        if (!expectedPattern.test(storagePathNormalized)) {
             return NextResponse.json({ error: "storagePath inválido" }, { status: 400 })
         }
 
-        const category = await prisma.libraryCategory.findUnique({
-            where: { id: categoryId },
-            select: { id: true },
+        const category = await db.query.libraryCategory.findFirst({
+            where: eq(libraryCategory.id, categoryId),
+            columns: { id: true },
         })
         if (!category) {
             return NextResponse.json({ error: "La categoría no existe" }, { status: 404 })
         }
 
-        const document = await prisma.libraryDocument.create({
-            data: {
+        const now = new Date()
+        const [document] = await db
+            .insert(libraryDocument)
+            .values({
+                id: crypto.randomUUID(),
                 title: title.trim(),
-                description: typeof description === "string" && description.trim().length > 0
-                    ? description.trim()
-                    : null,
+                description:
+                    typeof description === "string" && description.trim().length > 0
+                        ? description.trim()
+                        : null,
                 fileName,
-                storagePath,
+                storagePath: storagePathNormalized,
                 categoryId,
-            },
-            select: {
-                id: true,
-                title: true,
-                fileName: true,
-            },
-        })
+                createdAt: now,
+                updatedAt: now,
+            })
+            .returning({
+                id: libraryDocument.id,
+                title: libraryDocument.title,
+                fileName: libraryDocument.fileName,
+            })
 
         revalidatePath("/admin/dashboard/library")
         revalidatePath("/docs", "layout")

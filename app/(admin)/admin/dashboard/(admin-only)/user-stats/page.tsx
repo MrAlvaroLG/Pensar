@@ -1,6 +1,9 @@
 import Link from "next/link"
 import { ChevronLeft, ChevronRight, UsersRound } from "lucide-react"
-import prisma from "@/lib/db"
+import { and, gte, lt } from "drizzle-orm"
+
+import { db } from "@/lib/db"
+import { user } from "@/lib/db/schema"
 import { Button } from "@/ui/button"
 import {
     Card,
@@ -64,14 +67,9 @@ export default async function UserStatsPage({ searchParams }: UserStatsPageProps
     const monthStart = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0))
     const nextMonthStart = new Date(Date.UTC(year, month + 1, 1, 0, 0, 0, 0))
 
-    const users = await prisma.user.findMany({
-        where: {
-            createdAt: {
-                gte: monthStart,
-                lt: nextMonthStart,
-            },
-        },
-        select: {
+    const users = await db.query.user.findMany({
+        where: and(gte(user.createdAt, monthStart), lt(user.createdAt, nextMonthStart)),
+        columns: {
             createdAt: true,
         },
     })

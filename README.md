@@ -10,7 +10,7 @@ Este repositorio ahora es una sola aplicacion Next.js (sin monorepo).
 - React 19
 - TypeScript (strict)
 - Tailwind CSS v4
-- Prisma + PostgreSQL (Supabase)
+- Drizzle ORM + PostgreSQL (Supabase)
 - Better Auth
 - Vercel
 
@@ -22,7 +22,7 @@ Este repositorio ahora es una sola aplicacion Next.js (sin monorepo).
 ├── components/             # Componentes de negocio
 ├── ui/                     # Componentes UI base (shadcn)
 ├── lib/
-│   ├── db/                 # Prisma client + schema + scripts
+│   ├── db/                 # Drizzle schema + migrations + scripts
 │   ├── auth/               # Auth server/client helpers
 │   └── utils/              # Utilidades de dominio
 ├── hooks/
@@ -47,7 +47,7 @@ npm install
 
 ## Variables De Entorno
 
-Crea un archivo `.env` en la raiz del monorepo con valores como estos:
+Crea un archivo `.env` en la raíz del proyecto con valores como estos:
 
 ```env
 # Database
@@ -89,13 +89,16 @@ npm run lint
 ### Comandos De Base De Datos
 
 ```bash
-# Prisma Client
+# Generar migraciones (drizzle-kit)
 npm run db:generate
 
-# Sync schema -> DB
+# Aplicar migraciones
+npm run db:migrate
+
+# Alternativa para desarrollo (sin migraciones)
 npm run db:push
 
-# Prisma Studio
+# Drizzle Studio
 npm run db:studio
 
 # Seed de debates
@@ -123,14 +126,14 @@ npm run db:seed:debates
 - Equipos permitidos: `RED` y `BLUE`.
 - Validaciones criticas siempre en servidor.
 - Rutas admin protegidas por middleware.
-- Prisma debe inicializarse con singleton.
+- El pool de DB se reutiliza (singleton en dev) para evitar exceso de conexiones (ver `lib/db/index.ts`).
 
 ## Flujo De Trabajo Recomendado
 
 1. Configurar `.env`.
 2. Ejecutar `npm install`.
-3. Generar cliente Prisma con `npm run db:generate`.
-4. Aplicar schema con `npm run db:push`.
+3. Generar migraciones con `npm run db:generate`.
+4. Aplicar migraciones con `npm run db:migrate` (o `npm run db:push` para dev).
 5. Levantar entorno local con `npm run dev`.
 
 ## Deploy
