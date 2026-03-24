@@ -1,5 +1,9 @@
+"use client"
+
+import { motion } from "framer-motion"
 import { Clock3, FileCheck2, Megaphone, Scale, ShieldAlert, Users } from "lucide-react"
 
+import BlurText from "@/components/text/blur"
 import { Badge } from "@/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card"
 import SuggestionsSection from "@/components/sections/suggestions-section"
@@ -51,6 +55,14 @@ const proceso = [
     },
 ]
 
+const blurAnimation = {
+    from: { filter: "blur(10px)", opacity: 0, y: -30 },
+    to: [
+        { filter: "blur(5px)", opacity: 0.5, y: 4 },
+        { filter: "blur(0px)", opacity: 1, y: 0 },
+    ],
+}
+
 export default function FormatoYReglasPage() {
     return (
         <>
@@ -63,19 +75,45 @@ export default function FormatoYReglasPage() {
 
                 <div className="relative mx-auto flex max-w-6xl flex-col gap-10">
                 <section className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
-                    <Badge variant="outline" className="rounded-full border-border/70 bg-background/70 px-4 py-1 text-[11px] uppercase tracking-[0.28em] backdrop-blur-sm">
-                        Formato y reglas
-                    </Badge>
-                    <h1 className="text-balance text-3xl font-semibold tracking-tight text-foreground md:text-5xl">
-                        Todo lo esencial del proyecto PENSAR
-                    </h1>
-                    <p className="text-balance text-sm font-medium text-secondary-foreground md:text-lg">
-                        Un espacio mensual para dialogar sobre fe y razon con estructura formal,
-                        respeto y fuentes verificables.
-                    </p>
+                    <motion.div
+                        initial={{ opacity: 0, y: 18, filter: "blur(8px)" }}
+                        whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        viewport={{ once: true, amount: 0.4 }}
+                        transition={{ duration: 0.7, ease: "easeOut" }}
+                    >
+                        <Badge variant="outline" className="rounded-full border-border/70 bg-background/70 px-4 py-1 text-[11px] uppercase tracking-[0.28em] backdrop-blur-sm">
+                            Formato y reglas
+                        </Badge>
+                    </motion.div>
+                    <BlurText
+                        text="Todo lo esencial del proyecto PENSAR"
+                        className="text-balance text-3xl font-semibold tracking-tight text-foreground md:text-5xl"
+                        animateBy="words"
+                        direction="top"
+                        delay={80}
+                        animationFrom={blurAnimation.from}
+                        animationTo={blurAnimation.to}
+                        easing="easeOut"
+                    />
+                    <BlurText
+                        text="Un espacio mensual para dialogar sobre fe y razon con estructura formal, respeto y fuentes verificables."
+                        className="text-balance text-sm font-medium text-secondary-foreground md:text-lg"
+                        animateBy="words"
+                        direction="top"
+                        delay={35}
+                        animationFrom={blurAnimation.from}
+                        animationTo={blurAnimation.to}
+                        easing="easeOut"
+                    />
                 </section>
 
                 <section className="grid gap-4 md:grid-cols-2">
+                    <motion.div
+                        initial={{ opacity: 0, y: 24, filter: "blur(10px)" }}
+                        whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        viewport={{ once: true, amount: 0.35 }}
+                        transition={{ duration: 0.65, delay: 0.05, ease: "easeOut" }}
+                    >
                     <Card className="border-border/70 bg-background/80">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-xl">
@@ -91,7 +129,14 @@ export default function FormatoYReglasPage() {
                             </ul>
                         </CardContent>
                     </Card>
+                    </motion.div>
 
+                    <motion.div
+                        initial={{ opacity: 0, y: 24, filter: "blur(10px)" }}
+                        whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        viewport={{ once: true, amount: 0.35 }}
+                        transition={{ duration: 0.65, delay: 0.12, ease: "easeOut" }}
+                    >
                     <Card className="border-border/70 bg-background/80">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-xl">
@@ -107,9 +152,16 @@ export default function FormatoYReglasPage() {
                             </ul>
                         </CardContent>
                     </Card>
+                    </motion.div>
                 </section>
 
                 <section>
+                    <motion.div
+                        initial={{ opacity: 0, y: 26, filter: "blur(12px)" }}
+                        whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        viewport={{ once: true, amount: 0.25 }}
+                        transition={{ duration: 0.7, ease: "easeOut" }}
+                    >
                     <Card className="border-border/70 bg-background/80">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-xl">
@@ -118,17 +170,31 @@ export default function FormatoYReglasPage() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="grid gap-3 md:grid-cols-2">
-                            {proceso.map((item) => (
-                                <div key={item.title} className="rounded-2xl border border-border/70 bg-muted/25 p-4">
+                            {proceso.map((item, index) => (
+                                <motion.div
+                                    key={item.title}
+                                    initial={{ opacity: 0, x: -14, filter: "blur(8px)" }}
+                                    whileInView={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                                    viewport={{ once: true, amount: 0.35 }}
+                                    transition={{ duration: 0.55, delay: index * 0.08, ease: "easeOut" }}
+                                    className="rounded-2xl border border-border/70 bg-muted/25 p-4"
+                                >
                                     <p className="text-sm font-semibold text-foreground md:text-base">{item.title}</p>
                                     <p className="mt-1 text-sm leading-6 text-muted-foreground">{item.description}</p>
-                                </div>
+                                </motion.div>
                             ))}
                         </CardContent>
                     </Card>
+                    </motion.div>
                 </section>
 
                 <section className="grid gap-4 md:grid-cols-2">
+                    <motion.div
+                        initial={{ opacity: 0, y: 24, filter: "blur(10px)" }}
+                        whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        viewport={{ once: true, amount: 0.35 }}
+                        transition={{ duration: 0.65, delay: 0.04, ease: "easeOut" }}
+                    >
                     <Card className="border-border/70 bg-background/80">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-xl">
@@ -144,7 +210,14 @@ export default function FormatoYReglasPage() {
                             </ul>
                         </CardContent>
                     </Card>
+                    </motion.div>
 
+                    <motion.div
+                        initial={{ opacity: 0, y: 24, filter: "blur(10px)" }}
+                        whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        viewport={{ once: true, amount: 0.35 }}
+                        transition={{ duration: 0.65, delay: 0.11, ease: "easeOut" }}
+                    >
                     <Card className="border-border/70 bg-background/80">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-xl">
@@ -160,9 +233,16 @@ export default function FormatoYReglasPage() {
                             </ul>
                         </CardContent>
                     </Card>
+                    </motion.div>
                 </section>
 
                 <section>
+                    <motion.div
+                        initial={{ opacity: 0, y: 24, filter: "blur(10px)" }}
+                        whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        viewport={{ once: true, amount: 0.35 }}
+                        transition={{ duration: 0.65, ease: "easeOut" }}
+                    >
                     <Card className="border-border/70 bg-background/80">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-xl">
@@ -179,6 +259,7 @@ export default function FormatoYReglasPage() {
                             </p>
                         </CardContent>
                     </Card>
+                    </motion.div>
                 </section>
                 </div>
             </main>

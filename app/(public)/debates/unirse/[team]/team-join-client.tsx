@@ -70,7 +70,7 @@ const TEAM_COPY: Record<DebateTeam, {
 const fadeIn = (delay = 0) => ({
     initial: { opacity: 0, y: 16 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.4, delay, ease: "easeOut" as const },
+    transition: { duration: 0.2, delay, ease: "easeOut" as const },
 })
 
 function TeamChosenView({ viewerTeam }: { viewerTeam: DebateTeam }) {
@@ -152,7 +152,7 @@ export function TeamJoinClient({
 
             {!isLoggedIn && (
                 <motion.div
-                    {...fadeIn(0.05)}
+                    {...fadeIn(0.02)}
                     className="mb-6 rounded-xl border border-border bg-card p-5"
                 >
                     <h2 className="text-lg font-semibold text-foreground">Inicia sesion para continuar</h2>
@@ -171,7 +171,7 @@ export function TeamJoinClient({
             )}
 
             <motion.div
-                {...fadeIn(0.1)}
+                {...fadeIn(0.04)}
                 className={`rounded-2xl border p-6 md:p-8 ${teamInfo.cardClass}`}
             >
                 <Badge variant="secondary">Seleccion de equipo</Badge>

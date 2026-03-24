@@ -327,7 +327,7 @@ export function ChatClient({
 
     // Auto-scroll to bottom on new messages
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+        bottomRef.current?.scrollIntoView({ behavior: "auto" })
     }, [messages.length])
 
     // Supabase Realtime subscription

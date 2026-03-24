@@ -65,13 +65,13 @@ const TEAM_CONFIG: Record<Exclude<ViewerTeam, "none">, {
 const fadeIn = (delay = 0) => ({
     initial: { opacity: 0, y: 20, filter: "blur(8px)" },
     animate: { opacity: 1, y: 0, filter: "blur(0px)" },
-    transition: { duration: 0.8, delay, ease: "easeOut" as const },
+    transition: { duration: 0.28, delay, ease: "easeOut" as const },
 })
 
 function ThesisCard({ debate }: { debate: PublicDebate }) {
     return (
         <motion.div
-            {...fadeIn(0.3)}
+            {...fadeIn(0.08)}
             className="relative mt-8 w-full max-w-2xl rounded-xl border border-border bg-card/50 p-8 shadow-sm backdrop-blur-sm"
         >
             <span className="absolute left-4 top-3 font-serif text-5xl text-muted-foreground/20">
@@ -158,7 +158,7 @@ function TeamCard({
 
 function AudienceCard() {
     return (
-        <motion.div {...fadeIn(0.6)} className="md:col-span-2">
+        <motion.div {...fadeIn(0.16)} className="md:col-span-2">
             <Link
                 href="/debates/unirse/publico"
                 className="group flex flex-col items-center justify-between gap-4 overflow-hidden rounded-xl border border-border bg-card p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:flex-row md:p-6"
@@ -196,7 +196,7 @@ function SelectionLockedCard({
 
     return (
         <motion.div
-            {...fadeIn(0.45)}
+            {...fadeIn(0.12)}
             className={`mt-10 w-full max-w-4xl rounded-2xl border border-border p-6 ring-1 ${config.ring} ${config.accentBg}`}
         >
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -226,7 +226,7 @@ function SelectionLockedCard({
 
 function PastDebateCard({ debate, index }: { debate: PublicPastDebate; index: number }) {
     return (
-        <motion.div {...fadeIn(0.1 * (index + 1))}>
+        <motion.div {...fadeIn(0.04 * (index + 1))}>
             <div className="flex h-full flex-col rounded-xl border border-border bg-card p-6 shadow-sm transition-shadow hover:shadow-md">
                 <div className="mb-4 flex items-start justify-between">
                     <Badge variant="secondary" className="text-xs">
@@ -300,6 +300,8 @@ export function DebatesPageClient({
                                     className="text-4xl font-bold text-foreground md:text-6xl"
                                     animateBy="words"
                                     direction="top"
+                                    delay={30}
+                                    stepDuration={0.18}
                                     animationFrom={BLUR_FROM}
                                     animationTo={BLUR_TO}
                                     easing="easeOut"
@@ -309,7 +311,8 @@ export function DebatesPageClient({
                                     className="text-balance pt-2 text-center text-xl font-bold text-secondary-foreground md:text-5xl"
                                     animateBy="words"
                                     direction="top"
-                                    delay={100}
+                                    delay={45}
+                                    stepDuration={0.18}
                                     animationFrom={BLUR_FROM}
                                     animationTo={BLUR_TO}
                                     easing="easeOut"
@@ -319,7 +322,8 @@ export function DebatesPageClient({
                                     className="pt-4 text-center text-base text-muted-foreground md:text-xl"
                                     animateBy="words"
                                     direction="top"
-                                    delay={200}
+                                    delay={60}
+                                    stepDuration={0.18}
                                     animationFrom={BLUR_FROM}
                                     animationTo={BLUR_TO}
                                     easing="easeOut"
@@ -348,8 +352,8 @@ export function DebatesPageClient({
                                 <div className="pointer-events-none absolute -left-32 top-1/3 -z-10 h-80 w-80 -translate-y-1/2 rounded-full bg-red-500/15 blur-[100px]" />
                                 <div className="pointer-events-none absolute -right-32 top-1/3 -z-10 h-80 w-80 -translate-y-1/2 rounded-full bg-blue-500/15 blur-[100px]" />
 
-                                <TeamCard team="red" delay={0.4} />
-                                <TeamCard team="blue" delay={0.5} />
+                                <TeamCard team="red" delay={0.1} />
+                                <TeamCard team="blue" delay={0.14} />
                                 <AudienceCard />
                             </div>
 

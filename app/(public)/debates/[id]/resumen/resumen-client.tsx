@@ -46,7 +46,7 @@ const BLOCK_STYLES: Record<SummaryBlockTeam, {
 const fadeIn = (delay = 0) => ({
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.5, delay, ease: "easeOut" as const },
+    transition: { duration: 0.22, delay, ease: "easeOut" as const },
 })
 
 function safeTransformLinkUri(uri: string) {
@@ -96,7 +96,7 @@ export function ResumenClient({
 
             {!hasContent ? (
                 <motion.div
-                    {...fadeIn(0.15)}
+                    {...fadeIn(0.05)}
                     className="rounded-xl border border-border bg-card p-10 text-center"
                 >
                     <p className="text-muted-foreground">
@@ -112,7 +112,7 @@ export function ResumenClient({
                         return (
                             <motion.div
                                 key={block.id}
-                                {...fadeIn(0.1 * (i + 1))}
+                                {...fadeIn(0.035 * (i + 1))}
                                 className={`relative overflow-hidden rounded-xl border ${style.border} ${style.bg} p-6`}
                             >
                                 <div className={`absolute left-0 top-0 h-full w-1 ${style.bar}`} />

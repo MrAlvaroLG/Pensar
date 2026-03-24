@@ -9,12 +9,12 @@ import type { PublicPastDebate } from "@/lib/debates"
 const fadeIn = (delay = 0) => ({
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.5, delay, ease: "easeOut" as const },
+    transition: { duration: 0.22, delay, ease: "easeOut" as const },
 })
 
 function ArchiveCard({ debate, index }: { debate: PublicPastDebate; index: number }) {
     return (
-        <motion.div {...fadeIn(0.05 * (index + 1))}>
+        <motion.div {...fadeIn(0.02 * (index + 1))}>
             <div className="flex h-full flex-col rounded-xl border border-border bg-card p-6 shadow-sm transition-shadow hover:shadow-md">
                 <div className="mb-4 flex items-start justify-between">
                     <Badge variant="secondary" className="text-xs">
@@ -73,7 +73,7 @@ export function ArchivoClient({ debates }: { debates: PublicPastDebate[] }) {
 
             {debates.length === 0 ? (
                 <motion.div
-                    {...fadeIn(0.15)}
+                    {...fadeIn(0.05)}
                     className="rounded-xl border border-border bg-card p-10 text-center"
                 >
                     <p className="text-muted-foreground">

@@ -9,7 +9,7 @@ import type { PublicBibliographyLink, PublicBibliographyDoc } from "@/lib/debate
 const fadeIn = (delay = 0) => ({
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.5, delay, ease: "easeOut" as const },
+    transition: { duration: 0.22, delay, ease: "easeOut" as const },
 })
 
 export function BibliografiaClient({
@@ -49,7 +49,7 @@ export function BibliografiaClient({
 
             {!hasContent ? (
                 <motion.div
-                    {...fadeIn(0.15)}
+                    {...fadeIn(0.05)}
                     className="rounded-xl border border-border bg-card p-10 text-center"
                 >
                     <p className="text-muted-foreground">
@@ -59,7 +59,7 @@ export function BibliografiaClient({
             ) : (
                 <div className="space-y-8">
                     {links.length > 0 && (
-                        <motion.div {...fadeIn(0.1)} className="space-y-3">
+                        <motion.div {...fadeIn(0.04)} className="space-y-3">
                             <h2 className="text-lg font-semibold text-foreground">
                                 Enlaces
                             </h2>
@@ -84,7 +84,7 @@ export function BibliografiaClient({
                     )}
 
                     {docs.length > 0 && (
-                        <motion.div {...fadeIn(0.2)} className="space-y-3">
+                        <motion.div {...fadeIn(0.08)} className="space-y-3">
                             <h2 className="text-lg font-semibold text-foreground">
                                 Documentos
                             </h2>
