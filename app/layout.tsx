@@ -14,8 +14,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteDescription =
-  "Plataforma de debates mensuales";
+const siteDescription = "Explora ideas, participa en debates y fortalece tu pensamiento crítico en una plataforma diseñada para cuestionar, aprender y crecer.";
 
 function getMetadataBase(): URL {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
