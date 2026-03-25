@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteDescription = "Explora ideas, participa en debates y fortalece tu pensamiento crítico en una plataforma diseñada para cuestionar, aprender y crecer.";
+const siteDescription = "Debate sobre fe, ciencia y sociedad para cuestionar y comprender la verdad.";
 
 function getMetadataBase(): URL {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
