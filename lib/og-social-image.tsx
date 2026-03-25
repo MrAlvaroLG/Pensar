@@ -15,7 +15,7 @@ export async function generateSocialImage() {
   const pngBuffer = await sharp(svgBuffer, { density: 300 })
     .resize(420, 528, {
       fit: "contain",
-      background: { r: 245, g: 240, b: 230, alpha: 1 },
+      background: { r: 250, g: 250, b: 250, alpha: 1 },
     })
     .png()
     .toBuffer();
