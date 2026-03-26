@@ -22,11 +22,11 @@ export const STATUS_OPTIONS: Array<{ value: DebateRegistrationStatus; label: str
 ]
 
 export const POSTURA_OPTIONS: Array<{ value: PosturaValue; label: string }> = [
-    { value: "TEISTA", label: "Teista" },
+    { value: "TEISTA", label: "Teísta" },
     { value: "ATEO", label: "Ateo" },
-    { value: "AGNOSTICO", label: "Agnostico" },
-    { value: "DEISTA", label: "Deista" },
-    { value: "PANTEISTA", label: "Panteista" },
+    { value: "AGNOSTICO", label: "Agnóstico" },
+    { value: "DEISTA", label: "Deísta" },
+    { value: "PANTEISTA", label: "Panteísta" },
     { value: "OTRO", label: "Otra / Prefiero no decir" },
 ]
 
