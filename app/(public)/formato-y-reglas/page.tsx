@@ -26,7 +26,7 @@ const reglas = [
     "No interrupciones durante intervenciones.",
     "No ataques personales ni lenguaje ofensivo.",
     "Afirmaciones factuales con fuentes verificables y fecha.",
-    "No grabar audio o voz de ninguna persona presente en el debate",
+    "No grabar audio o video de ninguna persona presente en el debate",
 ]
 
 const moderador = [
