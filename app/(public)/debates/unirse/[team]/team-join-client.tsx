@@ -39,7 +39,7 @@ const TEAM_COPY: Record<DebateTeam, {
         title: "Equipo Rojo",
         roleLabel: "Ataca la mocion",
         roleDescription: "Tu mision es cuestionar la mocion, detectar debilidades y refutar la defensa del equipo azul.",
-        irreversibleDescription: "Al confirmar, no podras pasar a azul ni a publico.",
+        irreversibleDescription: "Al confirmar tu inscripción, aceptas que el equipo organizador te grabe o te realice fotografías. No podrás pasar a azul ni a público.",
         accentClass: "text-red-700",
         cardClass: "border-red-300/50 bg-red-50/70",
         buttonClass: "bg-red-700 text-white hover:bg-red-800",
@@ -49,7 +49,7 @@ const TEAM_COPY: Record<DebateTeam, {
         title: "Equipo Azul",
         roleLabel: "Defiende la mocion",
         roleDescription: "Tu mision es sostener la mocion con argumentos, evidencia y respuestas a los ataques del rojo.",
-        irreversibleDescription: "Al confirmar, no podras pasar a rojo ni a publico.",
+        irreversibleDescription: "Al confirmar tu inscripción, aceptas que el equipo organizador te grabe o te realice fotografías. No podrás pasar a rojo ni a público.",
         accentClass: "text-blue-700",
         cardClass: "border-blue-300/50 bg-blue-50/70",
         buttonClass: "bg-blue-700 text-white hover:bg-blue-800",
@@ -59,7 +59,7 @@ const TEAM_COPY: Record<DebateTeam, {
         title: "Publico",
         roleLabel: "Observa y hace preguntas",
         roleDescription: "Escuchas ambos equipos y participas en la ronda final de preguntas para profundizar el debate.",
-        irreversibleDescription: "Al confirmar, no podras pasar al equipo rojo ni azul.",
+        irreversibleDescription: "Al confirmar tu inscripción, aceptas que el equipo organizador te grabe o te realice fotografías. No podrás pasar al equipo rojo ni azul.",
         accentClass: "text-slate-700",
         cardClass: "border-slate-300/50 bg-slate-50/70",
         buttonClass: "bg-slate-800 text-white hover:bg-slate-900",
@@ -205,7 +205,7 @@ export function TeamJoinClient({
                     <div className="flex items-start gap-2">
                         <AlertTriangle className="mt-0.5 size-4 shrink-0" />
                         <div>
-                            <p className="text-sm font-semibold">Accion irreversible</p>
+                            <p className="text-sm font-semibold">Precaución</p>
                             <p className="mt-1 text-sm">
                                 {teamInfo.irreversibleDescription}
                             </p>
