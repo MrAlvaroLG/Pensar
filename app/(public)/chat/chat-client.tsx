@@ -65,10 +65,6 @@ interface ChatClientProps {
 }
 
 const TEAM_LABEL = { red: "Equipo Rojo", blue: "Equipo Azul" }
-const TEAM_COLOR = {
-    red: "text-red-500 border-red-500/30 bg-red-500/5",
-    blue: "text-blue-500 border-blue-500/30 bg-blue-500/5",
-}
 const TEAM_SEND_BTN = {
     red: "bg-red-600 hover:bg-red-700 text-white",
     blue: "bg-blue-600 hover:bg-blue-700 text-white",
@@ -143,7 +139,7 @@ function FilePreview({
             ) : (
                 <FileText className="size-8 text-muted-foreground" />
             )}
-            <span className="max-w-[200px] truncate text-muted-foreground">
+            <span className="max-w-50 truncate text-muted-foreground">
                 {file.name}
             </span>
             <button
@@ -247,7 +243,6 @@ function MessageBubble({
                         </button>
                     )}
                     {isAudio && message.fileUrl && (
-                        // eslint-disable-next-line jsx-a11y/media-has-caption
                         <audio controls src={message.fileUrl} className="mb-1 w-48" />
                     )}
                     {!isImage && !isAudio && message.fileUrl && (
@@ -258,13 +253,13 @@ function MessageBubble({
                             className="mb-1 flex items-center gap-1.5 underline underline-offset-2"
                         >
                             <FileText className="size-4 shrink-0" />
-                            <span className="truncate max-w-[200px]">
+                            <span className="max-w-50 truncate">
                                 {message.fileName ?? "archivo"}
                             </span>
                         </a>
                     )}
                     {message.content && (
-                        <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">
+                        <p className="whitespace-pre-wrap wrap-anywhere">
                             {message.content}
                         </p>
                     )}

@@ -3,7 +3,7 @@
 import { FormEvent, useMemo, useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { Lightbulb, Send } from "lucide-react"
+import { Send } from "lucide-react"
 
 import { authClient } from "@/lib/auth-client"
 import { Badge } from "@/ui/badge"

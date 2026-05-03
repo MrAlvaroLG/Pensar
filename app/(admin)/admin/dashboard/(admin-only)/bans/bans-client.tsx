@@ -14,7 +14,7 @@ import {
     DialogFooter,
 } from "@/ui/dialog"
 import { Label } from "@/ui/label"
-import { ShieldBan, ShieldOff, AlertTriangle, CheckCircle, XCircle } from "lucide-react"
+import { ShieldBan, ShieldOff, AlertTriangle, XCircle } from "lucide-react"
 import type { RegistrationWithBan, ReportRow } from "./page"
 
 const DURATION_OPTIONS = [
@@ -155,7 +155,7 @@ function ReportActionDialog({
                             <strong>{report.message.authorName}</strong> (
                             {report.message.team === "red" ? "Rojo" : "Azul"})
                         </p>
-                        <p className="break-words whitespace-pre-wrap">{report.message.content || "(archivo adjunto)"}</p>
+                        <p className="whitespace-pre-wrap wrap-break-word">{report.message.content || "(archivo adjunto)"}</p>
                     </div>
                     {report.reason && (
                         <p className="text-xs text-muted-foreground">
@@ -375,7 +375,7 @@ function ReportsTable({
             id: "message",
             header: "Mensaje",
             cell: ({ row }) => (
-                <p className="max-w-xs break-words text-sm line-clamp-3">
+                <p className="max-w-xs text-sm wrap-break-word line-clamp-3">
                     {row.original.message.content || "(archivo adjunto)"}
                 </p>
             ),

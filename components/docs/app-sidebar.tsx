@@ -104,10 +104,10 @@ export function AppSidebar({
                         <SidebarMenuItem key={doc.id}>
                             <SidebarMenuButton
                             asChild
-                            isActive={pathname === `/docs/${doc.id}`}
+                            isActive={pathname === `/library/${doc.id}`}
                             tooltip={doc.description ?? doc.title}
                             >
-                            <Link href={`/docs/${doc.id}`}>
+                            <Link href={`/library/${doc.id}`}>
                                 <FileText className="size-4" />
                                 <span>{doc.title}</span>
                             </Link>

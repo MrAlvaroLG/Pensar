@@ -1,46 +1,46 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Menu, X } from "lucide-react";
-import { Button } from "@/ui/button";
-import Image from "next/image";
-import { cn } from "@/lib/utils";
-import { usePathname } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
-import UserMenu from "@/components/layout/user-menu";
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { Menu, X } from "lucide-react"
+import { Button } from "@/ui/button"
+import Image from "next/image"
+import { cn } from "@/lib/utils"
+import { usePathname } from "next/navigation"
+import { authClient } from "@/lib/auth-client"
+import UserMenu from "@/components/layout/user-menu"
 
 const NAV_ITEMS = [
     { href: "/", label: "Inicio" },
     { href: "/debates", label: "Debates" },
     { href: "/chat", label: "Chat" },
-    { href: "/docs", label: "Biblioteca" },
+    { href: "/library", label: "Biblioteca" },
     { href: "/formato-y-reglas", label: "Formato y reglas" },
-] as const;
+] as const
 
 export default function NavBar() {
-    const [isOpen, setIsOpen] = useState(false);
-    const pathname = usePathname();
-    const { data: session, isPending } = authClient.useSession();
-    const isLoggedIn = !!session?.user;
+    const [isOpen, setIsOpen] = useState(false)
+    const pathname = usePathname()
+    const { data: session, isPending } = authClient.useSession()
+    const isLoggedIn = !!session?.user
 
-    const [prevPathname, setPrevPathname] = useState(pathname);
+    const [prevPathname, setPrevPathname] = useState(pathname)
     if (prevPathname !== pathname) {
-        setPrevPathname(pathname);
-        if (isOpen) setIsOpen(false);
+        setPrevPathname(pathname)
+        if (isOpen) setIsOpen(false)
     }
 
     useEffect(() => {
-        document.body.style.overflow = isOpen ? "hidden" : "";
+        document.body.style.overflow = isOpen ? "hidden" : ""
         return () => {
-            document.body.style.overflow = "";
-        };
-    }, [isOpen]);
+            document.body.style.overflow = ""
+        }
+    }, [isOpen])
 
     const isActive = (href: string) => {
-        if (href === "/") return pathname === "/";
-        return pathname.startsWith(href);
-    };
+        if (href === "/") return pathname === "/"
+        return pathname.startsWith(href)
+    }
 
     return (
         <>
@@ -147,5 +147,5 @@ export default function NavBar() {
                 aria-hidden="true"
             />
         </>
-    );
+    )
 }

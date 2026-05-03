@@ -156,7 +156,7 @@ export default function LibrarySectionClient({ categories }: Props) {
                                     </p>
                                 </div>
                                 <Button asChild size="lg">
-                                    <Link href="/docs">Ir a la biblioteca</Link>
+                                    <Link href="/library">Ir a la biblioteca</Link>
                                 </Button>
                             </CardContent>
                         </Card>
@@ -264,11 +264,11 @@ export default function LibrarySectionClient({ categories }: Props) {
 
                                     <div className="flex flex-col gap-3 sm:flex-row">
                                         <Button asChild size="lg" className="sm:min-w-44">
-                                            <Link href="/docs">Entrar en la biblioteca</Link>
+                                            <Link href="/library">Entrar en la biblioteca</Link>
                                         </Button>
                                         {featuredDocument ? (
                                             <Button asChild variant="outline" size="lg" className="border-border/70 bg-background/70 sm:min-w-44">
-                                                <Link href={`/docs/${featuredDocument.id}`}>Abrir un documento</Link>
+                                                <Link href={`/library/${featuredDocument.id}`}>Abrir un documento</Link>
                                             </Button>
                                         ) : null}
                                     </div>

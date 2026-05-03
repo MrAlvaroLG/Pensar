@@ -9,7 +9,7 @@ import { LibraryClient } from "./library-client"
 
 function revalidateLibraryViews() {
     revalidatePath("/admin/dashboard/library")
-    revalidatePath("/docs", "layout")
+    revalidatePath("/library", "layout")
     revalidatePath("/")
 }
 

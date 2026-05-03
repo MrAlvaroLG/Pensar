@@ -42,8 +42,6 @@ import {
 import {
     TEAM_OPTIONS,
     STATUS_OPTIONS,
-    getStatusLabel,
-    type DebateRegistrationStatus,
 } from "@/lib/debate-domain"
 
 export interface RegistrationRow {

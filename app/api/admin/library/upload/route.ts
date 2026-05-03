@@ -80,7 +80,7 @@ export async function POST(request: Request) {
             })
 
         revalidatePath("/admin/dashboard/library")
-        revalidatePath("/docs", "layout")
+        revalidatePath("/library", "layout")
         revalidatePath("/")
 
         return NextResponse.json({ ok: true, document }, { status: 201 })

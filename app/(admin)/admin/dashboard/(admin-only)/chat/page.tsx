@@ -74,13 +74,13 @@ function MessageItem({
                         className="flex items-center gap-1 text-xs text-blue-500 underline underline-offset-2"
                     >
                         <FileIcon type={msg.fileType} />
-                        <span className="truncate max-w-[200px]">
+                        <span className="max-w-50 truncate">
                             {msg.fileName ?? "archivo"}
                         </span>
                     </a>
                 )}
                 {msg.content && (
-                    <p className="break-words text-sm text-foreground">{msg.content}</p>
+                    <p className="text-sm text-foreground wrap-break-word">{msg.content}</p>
                 )}
             </div>
         </div>
